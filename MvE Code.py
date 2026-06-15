@@ -21,6 +21,7 @@ strompreis_dynamisch = dynamischer_strompreis["Strompreis dyn. 2030 ME"] # Jonat
 # %% Network erstellen
 
 network = pypsa.Network()
+network.set_snapshots(range(8760))
 
 # Snapshots anpassen...
 
@@ -29,7 +30,11 @@ network.add("Bus", name = "E-Bus")
 network.add("Generator", name = "Stromnetz", bus = "E-Bus", p_nom = 100, marginal_cost = strompreis_dynamisch)
 network.add("Generator", name = "PV", bus = "E-Bus", p_nom_extendable = True)
 
-#test
+
+#%%
+durchschnittlicher_strompreis = strompreis_dynamisch.mean()
+
+print("Durchschnittlicher Strompreis in 2030 beträgt",round(durchschnittlicher_strompreis, 2), "ct/kWh")
 
 # %%
 
