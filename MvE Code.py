@@ -7,15 +7,17 @@ import numpy as np
 #%% Datenimport
 
 dynamischer_strompreis = pd.read_csv("Strompreis.csv", sep=';', decimal=',')
-einstrahlung_süd = pd.read_csv("Süd_1kWp_30Neigung_0Azimuth.csv", sep=';', decimal=',')
-einstrahlung_west = pd.read_csv("West_1kWp_15Neigung_90Azimuth.csv", sep=';', decimal=',')
-einstrahlung_ost = pd.read_csv("Ost_1kWp_15Neigung_-90Azimuth.csv", sep=';', decimal=',')
+einstrahlung_süd = pd.read_csv("Süd_1kWp_30Neigung_0Azimuth.csv", sep=',', decimal='.')
+einstrahlung_west = pd.read_csv("West_1kWp_15Neigung_90Azimuth.csv", sep=',', decimal='.')
+einstrahlung_ost = pd.read_csv("Ost_1kWp_15Neigung_-90Azimuth.csv", sep=',', decimal='.')
 # %% Plots
 
 dynamischer_strompreis["Strompreis dyn. 2030 ME"].plot()
-einstrahlung_süd.plot()
-einstrahlung_west.plot()
-einstrahlung_ost.plot()
+
+#%%
+einstrahlung_süd["PV Leistung in kW"].plot()
+einstrahlung_west["PV Leistung in kW"].plot()
+einstrahlung_ost["PV Leistung in kW"].plot()
 #%% Parameter
 
 cost_bs = 500 # Marie Kosten in Präsi €/kWh
