@@ -1,10 +1,14 @@
-#%% Bibliotheken importieren
+#%% 
+
+#++++++++++ Bibliotheken importieren ++++++++++
 
 import pypsa
 import pandas as pd
 import numpy as np
 
-#%% Datenimport
+#%%
+
+#++++++++++ Datenimport ++++++++++
 
 df_spotmarktpreis = pd.read_csv("Strompreis_15min.csv", sep=';', decimal=',')
 dynamischer_strompreis = df_spotmarktpreis["Strompreis dyn. 2030 ME"]
@@ -15,7 +19,9 @@ einstrahlung_ost = pd.read_csv("Ost_1kWp_15Neigung_-90Azimuth.csv", sep=',', dec
 lastprofil_standort = 5 #!!!!!!!!!!!!!!!
 lastprofil_ebus = 10 #!!!!!!!!!!!!!
 
-# %% Plots
+# %% 
+
+#++++++++++ Plots +++++++++++
 
 dynamischer_strompreis[100:220].plot()
 
@@ -23,7 +29,9 @@ dynamischer_strompreis[100:220].plot()
 einstrahlung_süd["PV Leistung in kW"].plot()
 einstrahlung_west["PV Leistung in kW"].plot()
 einstrahlung_ost["PV Leistung in kW"].plot()
-#%% Parameter
+#%% 
+
+#++++++++++ Parameter +++++++++
 
 cost_bs = 500 # Marie Kosten in Präsi €/kWh
 cost_pv = 500 # Marius PV Kosten in Präsi €/kWp
@@ -36,27 +44,41 @@ effizienz_bs_laden = 0.99
 effizienz_bs_entladen = 0.99
 
 
-# %% Network erstellen
+# %%
+
+#++++++++++ Network erstellen++++++++++
 
 network = pypsa.Network()
+
+#++++++++++ Snapshots +++++++++ 
+
 network.set_snapshots(range(8760*4))
 
-# Snapshots
+#++++++++++ Bus +++++++++
 
 network.add("Bus", name = "Electricity")
 network.add("Bus", name = "E-Bus")
 #network.add("Bus", name = "BS")
 
+#++++++++++ Generatoren ++++++++++
+
 network.add("Generator", name = "Stromnetz", bus = "Electricity", p_nom = 10000, marginal_cost = dynamischer_strompreis)
 network.add("Generator", name = "PV", bus = "Electricity", p_nom_extendable = True, p_max_pu = einstrahlung_süd["PV Leistung in kW"], capital_cost = cost_pv)
 network.add("Generator", name = "Einspeisung", bus = "Electricity", p_nom = 10000, sign = -1, marginal_cost = einspeisevergütung)
+
+#++++++++++ Storages +++++++++++
 
 network.add("Store", name = "BS stationär", bus = "Electricity", e_nom_extendable = True, e_nom_max = 10000, capital_cost = cost_bs)
 
 network.add("Store", name = "E-Bus 1", bus = "E-Bus", e_nom = e_nom_ebus)   #Kosten weglassen? (Die Entscheidung wurde ja quasi getroffen,
                                                                             #dass solche E-Busse vorhanden sein sollen, daher ggf. Kosten nicht relevant)
+
+#++++++++++ Loads ++++++++++
+
 network.add("Load", name = "Last Standort", bus = "Electricity", p_set = lastprofil_standort)
 network.add("Load", name = "Last E-Bus", bus = "Electricity", p_set = lastprofil_ebus)
+
+#++++++++++ Links ++++++++++
 
 network.add("Link", name = "E-Bus laden", bus0 = "Electricity", bus1 = "E-Bus", p_nom_max = 10000, efficiency = effizienz_ebus_laden)
 network.add("Link", name = "E-Bus entladen", bus0 = "E-Bus", bus1 = "Electricity", p_nom_max = 10000, efficiency = effizienz_ebus_entladen)
@@ -64,9 +86,13 @@ network.add("Link", name = "E-Bus entladen", bus0 = "E-Bus", bus1 = "Electricity
 
 #%%
 
+#++++++++++ Visualisierung ++++++++++
+
 print("Durchschnittlicher Strompreis in 2030 beträgt",round(strompreis_statisch, 2), "ct/kWh")
 
 # %%
+
+#++++++++++ Abfahrt!!! ++++++++++
 
 network.optimize(solver_name="highs")
 # %%
