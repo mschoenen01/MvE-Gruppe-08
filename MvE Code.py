@@ -34,7 +34,8 @@ einstrahlung_ost["PV Leistung in kW"].plot()
 #++++++++++ Parameter +++++++++
 
 cost_bs = 500 # Marie Kosten in Präsi €/kWh
-cost_pv = 500 # Marius PV Kosten in Präsi €/kWp
+capex_pv = 639 # €/kWp
+opex_pv = 0.01 # 1% der Investitionskosten pro Jahr
 strompreis_statisch = dynamischer_strompreis.mean() # €/kWh
 einspeisevergütung = -0.07 #€/kWh ????????????
 e_nom_ebus = 200 # kWh ?????????????
@@ -63,7 +64,7 @@ network.add("Bus", name = "E-Bus")
 #++++++++++ Generatoren ++++++++++
 
 network.add("Generator", name = "Stromnetz", bus = "Electricity", p_nom = 10000, marginal_cost = dynamischer_strompreis)
-network.add("Generator", name = "PV", bus = "Electricity", p_nom_extendable = True, p_max_pu = einstrahlung_süd["PV Leistung in kW"], capital_cost = cost_pv)
+network.add("Generator", name = "PV", bus = "Electricity", p_nom_extendable = True, p_max_pu = einstrahlung_süd["PV Leistung in kW"], capital_cost = capex_pv)
 network.add("Generator", name = "Einspeisung", bus = "Electricity", p_nom = 10000, sign = -1, marginal_cost = einspeisevergütung)
 
 #++++++++++ Storages +++++++++++
