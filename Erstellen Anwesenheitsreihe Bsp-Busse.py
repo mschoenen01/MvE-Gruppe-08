@@ -1,8 +1,6 @@
 #%% Bibliotheken importieren
 
-import pypsa
 import pandas as pd
-import numpy as np
 import csv
 
 #%% df Import
@@ -16,13 +14,7 @@ bus2_ankommen = df.iloc[0, 3]
 bus3_abfahrt = df.iloc[0, 4]
 bus3_ankommen = df.iloc[0, 5]
 
-print(bus2_abfahrt)
-
-#%% In Datenformat umwandeln
-
-
-
-#%% Schleife
+#%% Schleife für Hinzufügen von Spalten mit 0 und 1
 
 with open("Fahrzeiten 3 Busse Bsp.CSV", mode="w", newline="", encoding="utf-8") as file:
     writer = csv.writer(file)
@@ -38,25 +30,3 @@ with open("Fahrzeiten 3 Busse Bsp.CSV", mode="w", newline="", encoding="utf-8") 
         ladezustand_bus3 = 0 if i >= bus3_abfahrt and i < bus3_ankommen else 1
 
         writer.writerow([i, ladezustand_bus1, ladezustand_bus2, ladezustand_bus3])
-
-
-
-#Erstelle csv-Datei mit 0 oder 1 für Bus1 für jede Viertelstunde eines Tages
-# %%
-
-'''
- i = 0
-
-    while i < 96:
-
-        if i < bus1_abfahrt:
-            ladezustand_bus1 = 1
-        elif i >= bus1_abfahrt and i < bus1_ankommen:
-            ladezustand_bus1 = 0
-        elif i >= bus1_ankommen:
-            ladezustand_bus1 = 1
-        else:
-            print("fehler")
-
-        print(ladezustand_bus1)
-'''
