@@ -10,7 +10,7 @@ import numpy as np
 
 #++++++++++ Datenimport ++++++++++
 
-df_spotmarktpreis = pd.read_csv("Strompreis_15min.csv", sep=';', decimal=',')
+df_spotmarktpreis = pd.read_csv("Strompreis dynamisch interpoliert.csv", sep=';', decimal=',')
 dynamischer_strompreis = df_spotmarktpreis["Strompreis dyn. 2030 ME"]
 einstrahlung_süd = pd.read_csv("Süd_1kWp_30Neigung_0Azimuth.csv", sep=',', decimal='.')
 einstrahlung_west = pd.read_csv("West_1kWp_15Neigung_90Azimuth.csv", sep=',', decimal='.')
