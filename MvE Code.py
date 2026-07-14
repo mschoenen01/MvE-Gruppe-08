@@ -12,9 +12,9 @@ import numpy as np
 
 df_spotmarktpreis = pd.read_csv("Strompreis dynamisch interpoliert.csv", sep=';', decimal=',')
 dynamischer_strompreis = df_spotmarktpreis["Strompreis dyn. 2030 ME"]
-einstrahlung_süd = pd.read_csv("Süd_1kWp_30Neigung_0Azimuth.csv", sep=',', decimal='.')
-einstrahlung_west = pd.read_csv("West_1kWp_15Neigung_90Azimuth.csv", sep=',', decimal='.')
-einstrahlung_ost = pd.read_csv("Ost_1kWp_15Neigung_-90Azimuth.csv", sep=',', decimal='.')
+einstrahlung_süd = pd.read_csv("pv_süd_interpoliert.csv", sep=',', decimal='.')
+einstrahlung_west = pd.read_csv("pv_west_interpoliert.csv", sep=',', decimal='.')
+einstrahlung_ost = pd.read_csv("pv_ost_interpoliert.csv", sep=',', decimal='.')
 
 lastprofil_standort = 5 #!!!!!!!!!!!!!!!
 lastprofil_ebus = 10 #!!!!!!!!!!!!!
@@ -100,4 +100,3 @@ network.optimize(solver_name="highs")
 network.generators
 # %%
 network.stores
-# %%
