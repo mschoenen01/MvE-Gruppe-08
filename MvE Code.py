@@ -58,7 +58,7 @@ network.set_snapshots(range(8760*4))
 #++++++++++ Bus +++++++++
 
 network.add("Bus", name = "Electricity")
-network.add("Bus", name = "E-Bus")
+#network.add("Bus", name = "E-Bus")
 #network.add("Bus", name = "BS")
 
 #++++++++++ Generatoren ++++++++++
@@ -71,19 +71,67 @@ network.add("Generator", name = "Einspeisung", bus = "Electricity", p_nom = 1000
 
 network.add("Store", name = "BS stationär", bus = "Electricity", e_nom_extendable = True, e_nom_max = 10000, capital_cost = cost_bs)
 
-network.add("Store", name = "E-Bus 1", bus = "E-Bus", e_nom = e_nom_ebus)   #Kosten weglassen? (Die Entscheidung wurde ja quasi getroffen,
+#network.add("Store", name = "E-Bus 1", bus = "E-Bus", e_nom = e_nom_ebus)   #Kosten weglassen? (Die Entscheidung wurde ja quasi getroffen,
                                                                             #dass solche E-Busse vorhanden sein sollen, daher ggf. Kosten nicht relevant)
 
 #++++++++++ Loads ++++++++++
 
 network.add("Load", name = "Last Standort", bus = "Electricity", p_set = lastprofil_standort)
-network.add("Load", name = "Last E-Bus", bus = "Electricity", p_set = lastprofil_ebus)
+#network.add("Load", name = "Last E-Bus", bus = "Electricity", p_set = lastprofil_ebus)
 
 #++++++++++ Links ++++++++++
 
-network.add("Link", name = "E-Bus laden", bus0 = "Electricity", bus1 = "E-Bus", p_nom_max = 10000, efficiency = effizienz_ebus_laden)
-network.add("Link", name = "E-Bus entladen", bus0 = "E-Bus", bus1 = "Electricity", p_nom_max = 10000, efficiency = effizienz_ebus_entladen)
+#network.add("Link", name = "E-Bus laden", bus0 = "Electricity", bus1 = "E-Bus", p_nom_max = 10000, efficiency = effizienz_ebus_laden)
+#network.add("Link", name = "E-Bus entladen", bus0 = "E-Bus", bus1 = "Electricity", p_nom_max = 10000, efficiency = effizienz_ebus_entladen)
 #network.add("Link", name = "BS laden", bus0 = "E-Bus", bus1 = "Electricity", p_nom_max = 10000, efficiency = effizienz_ebus_entladen)
+
+# %%
+#E-Busse
+anzahl_ebusse = 19
+
+for i in range(1, anzahl_ebusse + 1):
+    bus_node = f"E-Bus_{i}"
+    
+    network.add("Bus", name=bus_node)
+    
+    #Laden
+    network.add("Link", 
+                name=f"charge_ladesäule_{i}", 
+                bus0="Electricity", 
+                bus1=bus_node, 
+                #p_nom=???,
+                #efficiency= ???
+                )
+    
+    # Entladen
+    # WICHTIG: Die marginal_cost verhindern exzessives Arbitrage-Trading und schonen die Batterie.
+    network.add("Link", 
+                name=f"discharge_ladesäule_{i}", 
+                bus0=bus_node, 
+                bus1="Electricity", 
+                #p_nom=???,
+                #efficiency=???,
+                #marginal_cost=???
+                 )
+    
+    #Last
+    network.add("Load", 
+                name=f"Load_{i}", 
+                bus=bus_node, 
+                #p_set=???
+                ) 
+    
+    # e) Bus-Batterie als Speicher
+    network.add("Store", 
+                name=f"E-Bus_{i}_store", 
+                bus=bus_node, 
+                #e_nom=???, 
+                e_cyclic=True)
+
+# Check, ob Generierung erfolgreich war:
+print(network.stores.index.tolist())
+
+
 
 #%%
 
