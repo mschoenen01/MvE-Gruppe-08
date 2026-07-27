@@ -130,6 +130,9 @@ for i in range(1, anzahl_ebusse + 1):
 
 # Check, ob Generierung erfolgreich war:
 print(network.stores.index.tolist())
+print(network.links.index.tolist())
+print(network.buses.index.tolist())
+print(network.loads.index.tolist())
 
 
 
