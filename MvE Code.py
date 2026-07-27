@@ -11,7 +11,6 @@ import numpy as np
 #++++++++++ Datenimport ++++++++++
 
 df_spotmarktpreis = pd.read_csv("Strompreis dynamisch interpoliert.csv", sep=';', decimal=',')
-dynamischer_strompreis = df_spotmarktpreis["Strompreis dyn. 2030 ME"]
 einstrahlung_süd = pd.read_csv("pv_süd_interpoliert.csv", sep=',', decimal='.')
 einstrahlung_west = pd.read_csv("pv_west_interpoliert.csv", sep=',', decimal='.')
 einstrahlung_ost = pd.read_csv("pv_ost_interpoliert.csv", sep=',', decimal='.')
@@ -19,30 +18,43 @@ einstrahlung_ost = pd.read_csv("pv_ost_interpoliert.csv", sep=',', decimal='.')
 lastprofil_standort = 5 #!!!!!!!!!!!!!!!
 lastprofil_ebus = 10 #!!!!!!!!!!!!!
 
-# %% 
+anwesenheit_ebus = pd.read_csv("Bus_Anwesenheit_15min_Woche-v2.csv", sep=',')
 
-#++++++++++ Plots +++++++++++
+print(anwesenheit_ebus)
 
-dynamischer_strompreis[100:220].plot()
 
-#%%
-einstrahlung_süd["PV Leistung in kW"].plot()
-einstrahlung_west["PV Leistung in kW"].plot()
-einstrahlung_ost["PV Leistung in kW"].plot()
 #%% 
 
 #++++++++++ Parameter +++++++++
 
-cost_bs = 500 # Marie Kosten in Präsi €/kWh
-capex_pv = 639 # €/kWp
-opex_pv = 0.01 # 1% der Investitionskosten pro Jahr
+#Netz
+dynamischer_strompreis = df_spotmarktpreis["Strompreis dyn. 2030 ME"]
 strompreis_statisch = dynamischer_strompreis.mean() # €/kWh
 einspeisevergütung = -0.07 #€/kWh ????????????
+
+#PV
+capex_pv = 639 # €/kWp
+opex_pv = 0.01 # 1% der Investitionskosten pro Jahr
+
+#E-Busse
 e_nom_ebus = 200 # kWh ?????????????
 effizienz_ebus_laden = 0.99
 effizienz_ebus_entladen = 0.99
-effizienz_bs_laden = 0.99
-effizienz_bs_entladen = 0.99
+
+#Batteriespeicher stationär
+effizienz_bs_laden = 0.89
+effizienz_bs_entladen = 0.89
+#selbstentladung=  #??? Marius 
+#degradation_bs=  #??? Marius
+cost_bs = 500 # €/kWh ??? Marie Kosten in Präsi €/kWh
+#min_soc_bs = 
+#max_soc_bs = 
+
+#Ladesäule
+effizienz_ladesäule_laden=0.88
+effizienz_ladesäule_entladen=0.6
+p_nom_ladesäule= 22 #kW Annahme durch Quelle ersetzen, Zuteilung offen????????????
+
 
 
 # %%
@@ -76,7 +88,7 @@ network.add("Store", name = "BS stationär", bus = "Electricity", e_nom_extendab
 
 #++++++++++ Loads ++++++++++
 
-network.add("Load", name = "Last Standort", bus = "Electricity", p_set = lastprofil_standort)
+network.add("Load", name = "Last_Standort", bus = "Electricity", p_set = lastprofil_standort)
 #network.add("Load", name = "Last E-Bus", bus = "Electricity", p_set = lastprofil_ebus)
 
 #++++++++++ Links ++++++++++
@@ -86,7 +98,7 @@ network.add("Load", name = "Last Standort", bus = "Electricity", p_set = lastpro
 #network.add("Link", name = "BS laden", bus0 = "E-Bus", bus1 = "Electricity", p_nom_max = 10000, efficiency = effizienz_ebus_entladen)
 
 # %%
-#E-Busse
+#E-Busse Schleife
 anzahl_ebusse = 19
 
 for i in range(1, anzahl_ebusse + 1):
@@ -99,8 +111,9 @@ for i in range(1, anzahl_ebusse + 1):
                 name=f"charge_ladesäule_{i}", 
                 bus0="Electricity", 
                 bus1=bus_node, 
-                #p_nom=???,
-                #efficiency= ???
+                p_nom=p_nom_ladesäule,
+                efficiency=effizienz_ladesäule_laden,
+                p_max_pu=anwesenheit_ebus
                 )
     
     # Entladen
@@ -109,8 +122,8 @@ for i in range(1, anzahl_ebusse + 1):
                 name=f"discharge_ladesäule_{i}", 
                 bus0=bus_node, 
                 bus1="Electricity", 
-                #p_nom=???,
-                #efficiency=???,
+                p_nom=p_nom_ladesäule,
+                efficiency=effizienz_ladesäule_entladen,
                 #marginal_cost=???
                  )
     
@@ -126,7 +139,8 @@ for i in range(1, anzahl_ebusse + 1):
                 name=f"E-Bus_{i}_store", 
                 bus=bus_node, 
                 #e_nom=???, 
-                e_cyclic=True)
+                e_cyclic=True #sinnvoll? 
+                )
 
 # Check, ob Generierung erfolgreich war:
 print(network.stores.index.tolist())
