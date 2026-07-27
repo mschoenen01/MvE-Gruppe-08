@@ -168,8 +168,10 @@ print("Durchschnittlicher Strompreis in 2030 beträgt",round(strompreis_statisch
 
 #++++++++++ Abfahrt!!! ++++++++++
 
-network.optimize(solver_name="Gurobi")
+network.optimize(solver_name="highs")
 # %%
 network.generators
 # %%
 network.stores
+
+# %%
