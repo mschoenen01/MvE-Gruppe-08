@@ -56,7 +56,13 @@ effizienz_ladesäule_entladen=0.6
 p_nom_ladesäule= 22 #kW Annahme durch Quelle ersetzen, Zuteilung offen????????????
 
 
+#%%
 
+print(len(einstrahlung_süd))
+print(len(einstrahlung_west))
+print(len(einstrahlung_ost))
+print(len(dynamischer_strompreis))
+print(len(anwesenheit_ebus))
 # %%
 
 #++++++++++ Network erstellen++++++++++
@@ -65,7 +71,7 @@ network = pypsa.Network()
 
 #++++++++++ Snapshots +++++++++ 
 
-network.set_snapshots(range(8760*4))
+network.set_snapshots(range(4*8760))
 
 #++++++++++ Bus +++++++++
 
@@ -76,7 +82,7 @@ network.add("Bus", name = "Electricity")
 #++++++++++ Generatoren ++++++++++
 
 network.add("Generator", name = "Stromnetz", bus = "Electricity", p_nom = 10000, marginal_cost = dynamischer_strompreis)
-network.add("Generator", name = "PV", bus = "Electricity", p_nom_extendable = True, p_max_pu = einstrahlung_süd["PV Leistung in kW"], capital_cost = capex_pv)
+network.add("Generator", name = "PV", bus = "Electricity", p_nom_extendable = True, p_max_pu = einstrahlung_süd["PV Leistung in kW"].values, capital_cost = capex_pv)
 network.add("Generator", name = "Einspeisung", bus = "Electricity", p_nom = 10000, sign = -1, marginal_cost = einspeisevergütung)
 
 #++++++++++ Storages +++++++++++
@@ -113,7 +119,7 @@ for i in range(1, anzahl_ebusse + 1):
                 bus1=bus_node, 
                 p_nom=p_nom_ladesäule,
                 efficiency=effizienz_ladesäule_laden,
-                p_max_pu=anwesenheit_ebus
+                p_max_pu=anwesenheit_ebus[f"Bus_{i}"]
                 )
     
     # Entladen
@@ -124,6 +130,7 @@ for i in range(1, anzahl_ebusse + 1):
                 bus1="Electricity", 
                 p_nom=p_nom_ladesäule,
                 efficiency=effizienz_ladesäule_entladen,
+                p_max_pu=anwesenheit_ebus[f"Bus_{i}"].values,
                 #marginal_cost=???
                  )
     
@@ -131,7 +138,7 @@ for i in range(1, anzahl_ebusse + 1):
     network.add("Load", 
                 name=f"Load_{i}", 
                 bus=bus_node, 
-                #p_set=???
+                p_set=(((anwesenheit_ebus[f"Bus_{i}"])-1.0)*(-1.0))
                 ) 
     
     # e) Bus-Batterie als Speicher
@@ -149,7 +156,8 @@ print(network.buses.index.tolist())
 print(network.loads.index.tolist())
 
 
-
+#%%
+network.links_t.p_max_pu["charge_ladesäule_5"]
 #%%
 
 #++++++++++ Visualisierung ++++++++++
@@ -160,7 +168,7 @@ print("Durchschnittlicher Strompreis in 2030 beträgt",round(strompreis_statisch
 
 #++++++++++ Abfahrt!!! ++++++++++
 
-network.optimize(solver_name="highs")
+network.optimize(solver_name="Gurobi")
 # %%
 network.generators
 # %%
