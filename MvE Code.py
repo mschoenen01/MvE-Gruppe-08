@@ -16,7 +16,7 @@ einstrahlung_west = pd.read_csv("pv_west_interpoliert.csv", sep=',', decimal='.'
 einstrahlung_ost = pd.read_csv("pv_ost_interpoliert.csv", sep=',', decimal='.')
 
 lastprofil_standort = 5 #!!!!!!!!!!!!!!!
-lastprofil_ebus = 10 #!!!!!!!!!!!!!
+lastprofil_ebus = 22.82 #kW !!!!!!!!!!!!! Moritz
 
 anwesenheit_ebus = pd.read_csv("Bus_Anwesenheit_15min_Woche-v2.csv", sep=',')
 
@@ -37,7 +37,7 @@ capex_pv = 639 # €/kWp
 opex_pv = 0.01 # 1% der Investitionskosten pro Jahr
 
 #E-Busse
-e_nom_ebus = 200 # kWh ?????????????
+e_nom_ebus = 2000 # kWh ?????????????
 effizienz_ebus_laden = 0.99
 effizienz_ebus_entladen = 0.99
 
@@ -47,13 +47,13 @@ effizienz_bs_entladen = 0.89
 #selbstentladung=  #??? Marius 
 #degradation_bs=  #??? Marius
 cost_bs = 500 # €/kWh ??? Marie Kosten in Präsi €/kWh
-#min_soc_bs = 
-#max_soc_bs = 
+#min_soc_bs = 0.1 ???
+#max_soc_bs = 0.9 ???
 
 #Ladesäule
 effizienz_ladesäule_laden=0.88
 effizienz_ladesäule_entladen=0.6
-p_nom_ladesäule= 22 #kW Annahme durch Quelle ersetzen, Zuteilung offen????????????
+p_nom_ladesäule= 150 #kW Annahme durch Quelle ersetzen, Zuteilung offen????????????
 
 
 #%%
@@ -105,7 +105,7 @@ network.add("Load", name = "Last_Standort", bus = "Electricity", p_set = lastpro
 
 # %%
 #E-Busse Schleife
-anzahl_ebusse = 1
+anzahl_ebusse = 2
 
 for i in range(1, anzahl_ebusse + 1):
     bus_node = f"E-Bus_{i}"
@@ -117,7 +117,8 @@ for i in range(1, anzahl_ebusse + 1):
                 name=f"charge_ladesäule_{i}", 
                 bus0="Electricity", 
                 bus1=bus_node, 
-                p_nom=p_nom_ladesäule,
+                p_nom_extendable=True,
+                #p_nom=p_nom_ladesäule,
                 efficiency=effizienz_ladesäule_laden,
                 p_max_pu=anwesenheit_ebus[f"Bus_{i}"]
                 )
@@ -128,7 +129,8 @@ for i in range(1, anzahl_ebusse + 1):
                 name=f"discharge_ladesäule_{i}", 
                 bus0=bus_node, 
                 bus1="Electricity", 
-                p_nom=p_nom_ladesäule,
+                p_nom_extendable= True,
+                #p_nom=p_nom_ladesäule,
                 efficiency=effizienz_ladesäule_entladen,
                 p_max_pu=anwesenheit_ebus[f"Bus_{i}"].values,
                 #marginal_cost=???
@@ -138,14 +140,15 @@ for i in range(1, anzahl_ebusse + 1):
     network.add("Load", 
                 name=f"Load_{i}", 
                 bus=bus_node, 
-                p_set=(((anwesenheit_ebus[f"Bus_{i}"])-1.0)*(-1.0))
+                p_set=(1-(anwesenheit_ebus[f"Bus_{i}"])) * lastprofil_ebus
                 ) 
     
     # e) Bus-Batterie als Speicher
     network.add("Store", 
                 name=f"E-Bus_{i}_store", 
-                bus=bus_node, 
-                e_nom = 300, #kWh ??Beispielwert 
+                bus=bus_node,
+                e_nom_extendable=True, 
+                #e_nom = e_nom_ebus, #kWh  
                 e_cyclic=True #sinnvoll? 
                 )
 
