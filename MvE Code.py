@@ -145,7 +145,7 @@ for i in range(1, anzahl_ebusse + 1):
     network.add("Store", 
                 name=f"E-Bus_{i}_store", 
                 bus=bus_node, 
-                #e_nom=???, 
+                e_nom = 300, #kWh ??Beispielwert 
                 e_cyclic=True #sinnvoll? 
                 )
 
