@@ -37,7 +37,7 @@ capex_pv = 639 # €/kWp
 opex_pv = 0.01 # 1% der Investitionskosten pro Jahr
 
 #E-Busse
-e_nom_ebus = 2000 # kWh ?????????????
+e_nom_ebus = 300 # kWh ?????????????
 effizienz_ebus_laden = 0.99
 effizienz_ebus_entladen = 0.99
 
@@ -105,7 +105,7 @@ network.add("Load", name = "Last_Standort", bus = "Electricity", p_set = lastpro
 
 # %%
 #E-Busse Schleife
-anzahl_ebusse = 2
+anzahl_ebusse = 19
 
 for i in range(1, anzahl_ebusse + 1):
     bus_node = f"E-Bus_{i}"
@@ -117,8 +117,8 @@ for i in range(1, anzahl_ebusse + 1):
                 name=f"charge_ladesäule_{i}", 
                 bus0="Electricity", 
                 bus1=bus_node, 
-                p_nom_extendable=True,
-                #p_nom=p_nom_ladesäule,
+                #p_nom_extendable=True,
+                p_nom=p_nom_ladesäule,
                 efficiency=effizienz_ladesäule_laden,
                 p_max_pu=anwesenheit_ebus[f"Bus_{i}"]
                 )
@@ -129,8 +129,8 @@ for i in range(1, anzahl_ebusse + 1):
                 name=f"discharge_ladesäule_{i}", 
                 bus0=bus_node, 
                 bus1="Electricity", 
-                p_nom_extendable= True,
-                #p_nom=p_nom_ladesäule,
+                #p_nom_extendable= True,
+                p_nom=p_nom_ladesäule,
                 efficiency=effizienz_ladesäule_entladen,
                 p_max_pu=anwesenheit_ebus[f"Bus_{i}"].values,
                 #marginal_cost=???
@@ -140,15 +140,15 @@ for i in range(1, anzahl_ebusse + 1):
     network.add("Load", 
                 name=f"Load_{i}", 
                 bus=bus_node, 
-                p_set=(1-(anwesenheit_ebus[f"Bus_{i}"])) * lastprofil_ebus
+                p_set=(1-(anwesenheit_ebus[f"Bus_{i}"])) * 2
                 ) 
     
     # e) Bus-Batterie als Speicher
     network.add("Store", 
                 name=f"E-Bus_{i}_store", 
                 bus=bus_node,
-                e_nom_extendable=True, 
-                #e_nom = e_nom_ebus, #kWh  
+                #e_nom_extendable=True, 
+                e_nom = e_nom_ebus, #kWh  
                 e_cyclic=True #sinnvoll? 
                 )
 
