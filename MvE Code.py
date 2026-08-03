@@ -105,7 +105,7 @@ network.add("Load", name = "Last_Standort", bus = "Electricity", p_set = lastpro
 
 # %%
 #E-Busse Schleife
-anzahl_ebusse = 19
+anzahl_ebusse = 1
 
 for i in range(1, anzahl_ebusse + 1):
     bus_node = f"E-Bus_{i}"
@@ -157,7 +157,7 @@ print(network.loads.index.tolist())
 
 
 #%%
-network.links_t.p_max_pu["charge_ladesäule_5"]
+#network.links_t.p_max_pu["charge_ladesäule_5"]
 #%%
 
 #++++++++++ Visualisierung ++++++++++
