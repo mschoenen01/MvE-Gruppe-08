@@ -15,12 +15,12 @@ einstrahlung_süd = pd.read_csv("pv_süd_interpoliert.csv", sep=',', decimal='.'
 einstrahlung_west = pd.read_csv("pv_west_interpoliert.csv", sep=',', decimal='.')
 einstrahlung_ost = pd.read_csv("pv_ost_interpoliert.csv", sep=',', decimal='.')
 
-lastprofil_standort = 5 #!!!!!!!!!!!!!!!
-lastprofil_ebus = 5.70 #kW !!!!!!!!!!!!! Moritz
+lastprofil_standort = 5 #!!!!!!!!!!!!!!! Moritz
+lastprofil_ebus = 5.70 #kW 
 
 anwesenheit_ebus = pd.read_csv("Bus_Anwesenheit_15min_Woche-v2.csv", sep=',')
 
-print(anwesenheit_ebus)
+#print(anwesenheit_ebus)
 
 
 #%% 
@@ -30,30 +30,33 @@ print(anwesenheit_ebus)
 #Netz
 dynamischer_strompreis = df_spotmarktpreis["Strompreis dyn. 2030 ME"]
 strompreis_statisch = dynamischer_strompreis.mean() # €/kWh
-einspeisevergütung = -0.07 #€/kWh ????????????
+einspeisevergütung = -0.07 #€/kWh ???????????? Jonathan
 
 #PV
 capex_pv = 639 # €/kWp
 opex_pv = 0.01 # 1% der Investitionskosten pro Jahr
 
 #E-Busse
-e_nom_ebus = 300 # kWh ?????????????
+e_nom_ebus = 1000 # kWh ?????????????
 effizienz_ebus_laden = 0.99
 effizienz_ebus_entladen = 0.99
+#opex_ebus = 0#????????? Marius 
+#selbstentladung_ebus = 0 #???????
 
 #Batteriespeicher stationär
+capex_bs = 500 # €/kWh ??????? Marie Kosten in Präsi
+#opex_bs=0 # €/kWh ??????????
 effizienz_bs_laden = 0.89
 effizienz_bs_entladen = 0.89
-#selbstentladung=  #??? Marius 
-#degradation_bs=  #??? Marius
-cost_bs = 500 # €/kWh ??? Marie Kosten in Präsi €/kWh
-#min_soc_bs = 0.1 ???
-#max_soc_bs = 0.9 ???
+#selbstentladung_bs=  #?????? Marius 
+#min_soc_bs = 0.1 ??????? Marius
+#max_soc_bs = 0.9 ??????? Marius
 
 #Ladesäule
+#opex_ladesäule=0 #€/kWh ?????????????
 effizienz_ladesäule_laden=0.88
 effizienz_ladesäule_entladen=0.6
-p_nom_ladesäule= 150 #kW Annahme durch Quelle ersetzen, Zuteilung offen????????????
+p_nom_ladesäule= 300 #kW Annahme durch Quelle ersetzen, Jonathan ????????????
 
 
 #%%
@@ -87,7 +90,7 @@ network.add("Generator", name = "Einspeisung", bus = "Electricity", p_nom = 1000
 
 #++++++++++ Storages +++++++++++
 
-network.add("Store", name = "BS stationär", bus = "Electricity", e_nom_extendable = True, e_nom_max = 10000, capital_cost = cost_bs)
+network.add("Store", name = "BS stationär", bus = "Electricity", e_nom_extendable = True, e_nom_max = 10000, capital_cost = capex_bs)
 
 #network.add("Store", name = "E-Bus 1", bus = "E-Bus", e_nom = e_nom_ebus)   #Kosten weglassen? (Die Entscheidung wurde ja quasi getroffen,
                                                                             #dass solche E-Busse vorhanden sein sollen, daher ggf. Kosten nicht relevant)
@@ -105,7 +108,7 @@ network.add("Load", name = "Last_Standort", bus = "Electricity", p_set = lastpro
 
 # %%
 #E-Busse Schleife
-anzahl_ebusse = 2
+anzahl_ebusse = 19
 
 for i in range(1, anzahl_ebusse + 1):
     bus_node = f"E-Bus_{i}"
@@ -149,6 +152,8 @@ for i in range(1, anzahl_ebusse + 1):
                 bus=bus_node,
                 #e_nom_extendable=True, 
                 e_nom = e_nom_ebus, #kWh  
+                #e_nom_extendable=True,
+                #capital_cost=1, #€/kWh                
                 e_cyclic=True #sinnvoll? 
                 )
 
@@ -176,5 +181,13 @@ network.optimize(solver_name="highs")
 network.generators
 # %%
 network.stores
+
+# %%
+#network.links_t.p0["charge_ladesäule_2"][0:672].plot()
+#network.generators_t.p["PV"][20162:20834].plot()
+#network.stores_t.e["BS stationär"][20162:20834].plot()
+#network.loads_t.p["Last_Standort"][20162:20834].plot()
+network.links_t.p_max_pu[20162:20834].plot()
+# %%
 
 # %%
