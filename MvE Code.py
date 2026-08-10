@@ -16,7 +16,7 @@ einstrahlung_west = pd.read_csv("pv_west_interpoliert.csv", sep=',', decimal='.'
 einstrahlung_ost = pd.read_csv("pv_ost_interpoliert.csv", sep=',', decimal='.')
 
 lastprofil_standort = 5 #!!!!!!!!!!!!!!!
-lastprofil_ebus = 22.82 #kW !!!!!!!!!!!!! Moritz
+lastprofil_ebus = 5.70 #kW !!!!!!!!!!!!! Moritz
 
 anwesenheit_ebus = pd.read_csv("Bus_Anwesenheit_15min_Woche-v2.csv", sep=',')
 
@@ -105,7 +105,7 @@ network.add("Load", name = "Last_Standort", bus = "Electricity", p_set = lastpro
 
 # %%
 #E-Busse Schleife
-anzahl_ebusse = 19
+anzahl_ebusse = 2
 
 for i in range(1, anzahl_ebusse + 1):
     bus_node = f"E-Bus_{i}"
@@ -140,10 +140,10 @@ for i in range(1, anzahl_ebusse + 1):
     network.add("Load", 
                 name=f"Load_{i}", 
                 bus=bus_node, 
-                p_set=(1-(anwesenheit_ebus[f"Bus_{i}"])) * 2
+                p_set= (1-(anwesenheit_ebus[f"Bus_{i}"])) * lastprofil_ebus
                 ) 
     
-    # e) Bus-Batterie als Speicher
+    #E-Bus-Batterie als Speicher
     network.add("Store", 
                 name=f"E-Bus_{i}_store", 
                 bus=bus_node,
