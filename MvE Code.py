@@ -57,7 +57,7 @@ effizienz_bs_entladen = 0.89
 effizienz_ladesäule_laden=0.88
 effizienz_ladesäule_entladen=0.6
 p_nom_ladesäule= 300 #kW Annahme durch Quelle ersetzen, Jonathan ????????????
-
+opex_ladesäule = 3000 #€/a
 
 #%%
 
@@ -135,7 +135,7 @@ for i in range(1, anzahl_ebusse + 1):
                 #p_nom_extendable= True,
                 p_nom=p_nom_ladesäule,
                 efficiency=effizienz_ladesäule_entladen,
-                p_max_pu=anwesenheit_ebus[f"Bus_{i}"].values,
+                p_max_pu=anwesenheit_ebus[f"Bus_{i}"],
                 #marginal_cost=???
                  )
     
@@ -188,6 +188,10 @@ network.stores
 #network.stores_t.e["BS stationär"][20162:20834].plot()
 #network.loads_t.p["Last_Standort"][20162:20834].plot()
 network.links_t.p_max_pu[20162:20834].plot()
+
 # %%
+network.links_t.p0["charge_ladesäule_6"][20462:20634].plot()
+network.links_t.p0["discharge_ladesäule_11"][20462:20634].plot()
+network.stores_t.e["E-Bus_6_store"][20462:20634].plot()
 
 # %%
