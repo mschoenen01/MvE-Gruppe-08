@@ -15,7 +15,7 @@ einstrahlung_süd = pd.read_csv("pv_süd_interpoliert.csv", sep=',', decimal='.'
 einstrahlung_west = pd.read_csv("pv_west_interpoliert.csv", sep=',', decimal='.')
 einstrahlung_ost = pd.read_csv("pv_ost_interpoliert.csv", sep=',', decimal='.')
 
-lastprofil_standort = 5 #kW!!!!!!!!!!!!!!! Moritz
+lastprofil_standort = pd.read_csv("G25_Gewerbeprofil_2024_500000kWh_15min.csv", sep=';', decimal=',')
 lastprofil_ebus = 5.70 #kW 
 
 anwesenheit_ebus = pd.read_csv("Bus_Anwesenheit_15min_Woche-v2.csv", sep=',')
@@ -101,7 +101,7 @@ network.add("Store", name = "BS stationär", bus = "Electricity", e_nom_extendab
 
 #++++++++++ Loads ++++++++++
 
-network.add("Load", name = "Last_Standort", bus = "Electricity", p_set = lastprofil_standort)
+network.add("Load", name = "Last_Standort", bus = "Electricity", p_max_pu = lastprofil_standort["Last_kWh"].values)
 #network.add("Load", name = "Last E-Bus", bus = "Electricity", p_set = lastprofil_ebus)
 
 #++++++++++ Links ++++++++++
