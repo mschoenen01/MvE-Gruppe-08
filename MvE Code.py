@@ -16,7 +16,10 @@ einstrahlung_west = pd.read_csv("pv_west_interpoliert.csv", sep=',', decimal='.'
 einstrahlung_ost = pd.read_csv("pv_ost_interpoliert.csv", sep=',', decimal='.')
 
 lastprofil_standort = pd.read_csv("G25_Gewerbeprofil_2024_500000kWh_15min.csv", sep=';', decimal=',')
-lastprofil_ebus = 5.70 #kW 
+lastprofil_ebus = pd.read_csv("Fahrleistung_Busse_2024_15min_korrigiert.csv", sep=';', decimal=',') 
+#Moritz: Für die Fahrleistung der Busse hat ChatGPT auch die Feiertage des Jahres mit einbezogen und für Feiertage den Fahrplan für Sonn- und Feiertage angewandt. 
+#Soweit ich das sehe, ist das in der Anwesenheits-CSV nicht so gemacht. Bspw.  An Feiertagen gibt es also einige Ungenauigkeiten, was den Verbrauch angeht.
+#Ich habe generell das Gefühl, dass der bei der Anwesenheitstabelle einige Sachen durcheinander geworfen hat. Zu mindestens am 01.01 ist ein wilder Fahrplan, welcher weder dem für Feiertage noch einem regulären Montag entspricht.
 
 anwesenheit_ebus = pd.read_csv("Bus_Anwesenheit_15min_Woche-v2.csv", sep=',')
 
@@ -101,7 +104,8 @@ network.add("Store", name = "BS stationär", bus = "Electricity", e_nom_extendab
 
 #++++++++++ Loads ++++++++++
 
-network.add("Load", name = "Last_Standort", bus = "Electricity", p_max_pu = lastprofil_standort["Last_kWh"].values)
+network.add("Load", name = "Last_Standort", bus = "Electricity", p_set = lastprofil_standort["Last_kWh"].values) 
+#Ich weiß gerade gar nicht, ob die Last-Werte vom Standort als P_max_pu oder p_set angegeben werden müssen, da es ja feste Verbräuche sind, welche nicht auf einen Wert zwischen 0 und 1 dimensioniert sind, sondern auf einen Jahresverbrauch von 500.000kWh. 
 #network.add("Load", name = "Last E-Bus", bus = "Electricity", p_set = lastprofil_ebus)
 
 #++++++++++ Links ++++++++++
@@ -149,7 +153,7 @@ for i in range(5,8):
     network.add("Load", 
                 name=f"Load_{i}", 
                 bus=bus_node, 
-                p_set= (1-(anwesenheit_ebus[f"Bus_{i}"])) * lastprofil_ebus
+                p_set= (1-(anwesenheit_ebus[f"Bus_{i}"])) * lastprofil_ebus[f"Bus_{i}_kWh_15min"] #Moritz: Das habe ich hinzugefügt. Konnte es aber noch nicht testen, da python bei mir nicht funktionieren will. Vorm Urlaub schaffe ich das nicht mehr zu fixen
                 ) 
     
     #E-Bus-Batterie als Speicher
