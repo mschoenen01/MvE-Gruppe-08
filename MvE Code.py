@@ -16,7 +16,7 @@ einstrahlung_west = pd.read_csv("pv_west_interpoliert.csv", sep=',', decimal='.'
 einstrahlung_ost = pd.read_csv("pv_ost_interpoliert.csv", sep=',', decimal='.')
 
 lastprofil_standort = pd.read_csv("G25_Gewerbeprofil_2024_500000kWh_15min.csv", sep=';', decimal=',')
-lastprofil_ebus = pd.read_csv("PyPSA_Bus_Verbrauch_15min_Jahr-v2.csv", sep=';', decimal=',') 
+lastprofil_ebus = pd.read_csv("PyPSA_Bus_Verbrauch_15min_Jahr-v2.csv", sep=',', decimal='.') 
 
 #lastprofil_ebus = pd.read_csv("Fahrleistung_Busse_2024_15min_korrigiert.csv", sep=';', decimal=',') 
 #Moritz: Für die Fahrleistung der Busse hat ChatGPT auch die Feiertage des Jahres mit einbezogen und für Feiertage den Fahrplan für Sonn- und Feiertage angewandt. 
@@ -42,6 +42,7 @@ capex_pv = 639 # €/kWp
 opex_pv = 0.01 # 1% der Investitionskosten pro Jahr
 
 #E-Busse
+#Jonathan: lässt minimale Kapazität berechnen mit Degradation und SOC
 e_nom_ebus = 600 # kWh ?????????????
 effizienz_ebus_laden = 0.99
 effizienz_ebus_entladen = 0.99
@@ -49,8 +50,8 @@ effizienz_ebus_entladen = 0.99
 #unterhaltungskosten = 0.40 #€/km 
 #personalkosten = 901000 #€/a
 #selbstentladung_ebus = #Annahme: vernachlässigbar 
-#min_soc_bs = 0.2
-#max_soc_bs = 0.9
+min_soc_bs = 0.2
+max_soc_bs = 0.9
 
 #Batteriespeicher stationär
 capex_bs = 500 # €/kWh ??????? Marie Kosten in Präsi
@@ -169,8 +170,8 @@ for i in range(1, anzahl_ebusse + 1):
                 name=f"E-Bus_{i}_store", 
                 bus=bus_node,
                 #e_nom_extendable=True, 
-                #e_nom = e_nom_ebus, #kWh  
-                e_nom_extendable=True,
+                e_nom = e_nom_ebus, #kWh  
+                #e_nom_extendable=True,
                 #capital_cost=1, #€/kWh                
                 e_cyclic=True #sinnvoll? 
                 )
