@@ -16,7 +16,9 @@ einstrahlung_west = pd.read_csv("pv_west_interpoliert.csv", sep=',', decimal='.'
 einstrahlung_ost = pd.read_csv("pv_ost_interpoliert.csv", sep=',', decimal='.')
 
 lastprofil_standort = pd.read_csv("G25_Gewerbeprofil_2024_500000kWh_15min.csv", sep=';', decimal=',')
-lastprofil_ebus = pd.read_csv("Fahrleistung_Busse_2024_15min_korrigiert.csv", sep=';', decimal=',') 
+lastprofil_ebus = pd.read_csv("PyPSA_Bus_Verbrauch_15min_Jahr-v2.csv", sep=';', decimal=',') 
+
+#lastprofil_ebus = pd.read_csv("Fahrleistung_Busse_2024_15min_korrigiert.csv", sep=';', decimal=',') 
 #Moritz: Für die Fahrleistung der Busse hat ChatGPT auch die Feiertage des Jahres mit einbezogen und für Feiertage den Fahrplan für Sonn- und Feiertage angewandt. 
 #Soweit ich das sehe, ist das in der Anwesenheits-CSV nicht so gemacht. Bspw.  An Feiertagen gibt es also einige Ungenauigkeiten, was den Verbrauch angeht.
 #Ich habe generell das Gefühl, dass der bei der Anwesenheitstabelle einige Sachen durcheinander geworfen hat. Zu mindestens am 01.01 ist ein wilder Fahrplan, welcher weder dem für Feiertage noch einem regulären Montag entspricht.
@@ -65,6 +67,11 @@ effizienz_ladesäule_entladen=0.6
 p_nom_ladesäule= 75 #kW Annahme durch Quelle ersetzen, Jonathan ????????????
 opex_ladesäule = 3000 #€/a
 capex_ladesäule = 10000 #€/a
+
+
+#Annuitäten hinzufügen! #Jonathan????
+#Vergleich: stationärer Speicher, dyn Tarife, bidirek. Laden, PV
+
 
 #%%
 
@@ -116,7 +123,7 @@ network.add("Load", name = "Last_Standort", bus = "Electricity", p_set = lastpro
 
 # %%
 #E-Busse Schleife
-anzahl_ebusse = 19
+anzahl_ebusse = 2
 
 for i in range(1, anzahl_ebusse + 1):
 #for i in range(5,8):
@@ -129,8 +136,8 @@ for i in range(1, anzahl_ebusse + 1):
                 name=f"charge_ladesäule_{i}", 
                 bus0="Electricity", 
                 bus1=bus_node, 
-                #p_nom=p_nom_ladesäule,
-                p_nom_extendable=True,
+                p_nom=p_nom_ladesäule,
+                #p_nom_extendable=True,
                 efficiency=effizienz_ladesäule_laden,
                 p_max_pu=anwesenheit_ebus[f"Bus_{i}"],
                 marginal_cost = opex_ladesäule / 2,
@@ -141,8 +148,9 @@ for i in range(1, anzahl_ebusse + 1):
     network.add("Link", 
                 name=f"discharge_ladesäule_{i}", 
                 bus0=bus_node, 
-                bus1="Electricity", 
-                p_nom_extendable=True,
+                bus1="Electricity",
+                p_nom=p_nom_ladesäule,
+                #p_nom_extendable=True,
                 efficiency=effizienz_ladesäule_entladen,
                 p_max_pu=anwesenheit_ebus[f"Bus_{i}"],
                 marginal_cost = opex_ladesäule / 2,
@@ -153,7 +161,7 @@ for i in range(1, anzahl_ebusse + 1):
     network.add("Load", 
                 name=f"Load_{i}", 
                 bus=bus_node, 
-                p_set= (1-(anwesenheit_ebus[f"Bus_{i}"])) * lastprofil_ebus[f"Bus_{i}_kWh_15min"] #Moritz: Das habe ich hinzugefügt. Konnte es aber noch nicht testen, da python bei mir nicht funktionieren will. Vorm Urlaub schaffe ich das nicht mehr zu fixen
+                p_set= (1-(anwesenheit_ebus[f"Bus_{i}"])) * lastprofil_ebus[f"Bus_{i}"] 
                 ) 
     
     #E-Bus-Batterie als Speicher
