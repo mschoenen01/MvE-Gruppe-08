@@ -116,10 +116,10 @@ network.add("Load", name = "Last_Standort", bus = "Electricity", p_set = lastpro
 
 # %%
 #E-Busse Schleife
-anzahl_ebusse = 3
+anzahl_ebusse = 19
 
-#for i in range(1, anzahl_ebusse + 1):
-for i in range(5,8):
+for i in range(1, anzahl_ebusse + 1):
+#for i in range(5,8):
     bus_node = f"E-Bus_{i}"
     
     network.add("Bus", name=bus_node)
