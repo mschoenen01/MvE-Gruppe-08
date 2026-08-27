@@ -184,7 +184,7 @@ for i in range(1, anzahl_ebusse+1):
                 #e_nom = e_nom_ebus, #kWh  
                 e_min_pu = min_soc_bs,
                 e_max_pu = max_soc_bs,
-                capital_cost=1, #€/kWh                
+                capital_cost=10000, #€/kWh                
                 e_cyclic=True #sinnvoll? 
                 )
 
@@ -225,7 +225,10 @@ network.links
 #network.links_t.p0["charge_ladesäule_9"].max()
 #network.links_t.p0["charge_ladesäule_10"].max()
 
-
+network.links_t.p0["discharge_ladesäule_1"][0:700].plot()
+network.links_t.p0["discharge_ladesäule_2"][0:700].plot()
+network.links_t.p0["discharge_ladesäule_3"][0:700].plot()
+network.links_t.p0["discharge_ladesäule_4"][0:700].plot()
 network.links_t.p0["discharge_ladesäule_5"][0:700].plot()
 network.links_t.p0["discharge_ladesäule_6"][0:700].plot()
 network.links_t.p0["discharge_ladesäule_7"][0:700].plot()
@@ -236,6 +239,11 @@ network.links_t.p0["discharge_ladesäule_11"][0:700].plot()
 network.links_t.p0["discharge_ladesäule_12"][0:700].plot()
 network.links_t.p0["discharge_ladesäule_13"][0:700].plot()
 network.links_t.p0["discharge_ladesäule_14"][0:700].plot()
+network.links_t.p0["discharge_ladesäule_15"][0:700].plot()
+network.links_t.p0["discharge_ladesäule_16"][0:700].plot()
+network.links_t.p0["discharge_ladesäule_17"][0:700].plot()
+network.links_t.p0["discharge_ladesäule_18"][0:700].plot()
+network.links_t.p0["discharge_ladesäule_19"][0:700].plot()
 
 #%%
 network.stores_t.e["E-Bus_11_store"][0:700].plot()
@@ -246,4 +254,7 @@ network.stores_t.e["E-Bus_12_store"][0:700].plot()
 #network.stores_t.e["BS stationär"][20462:20634].plot()
 # %%
 
+# %%
+
+network.generators_t.p["Einspeisung"][:700].plot()
 # %%
