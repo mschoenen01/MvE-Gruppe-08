@@ -90,6 +90,7 @@ network = pypsa.Network()
 #++++++++++ Snapshots +++++++++ 
 
 network.set_snapshots(range(4*8760))
+#network.snapshot_weightings[:] = 0.25 ?????????
 
 #++++++++++ Bus +++++++++
 
