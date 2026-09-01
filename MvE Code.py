@@ -4,6 +4,7 @@
 import pypsa
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 #%%
 
@@ -106,7 +107,7 @@ network.add("Generator", name = "PV Carport West", bus = "Electricity", p_nom_ex
 
 #++++++++++ Storages +++++++++++
 
-network.add("Store", name = "BS stationär", bus = "BS", e_nom_extendable = True, e_nom_max = 1000, capital_cost = capex_bs_anuity, marginal_cost = opex_bs) 
+network.add("Store", name = "BS stationär", bus = "BS", e_nom_extendable = True, e_nom_max = 10000, capital_cost = capex_bs_anuity, marginal_cost = opex_bs) 
 
 #++++++++++ Loads ++++++++++
 
@@ -233,8 +234,8 @@ gesamtkosten_jährlich = (
 
 gesamtkosten_10_jahre = gesamtkosten_jährlich * 10
 
-print("Die jährlichen Gesamtkosten betragen: {gesamtkosten_jährlich} €")
-print("Die Kosten über die Betriebsdauer von 10 Jahren betragen: {gesamtkosten_10_jahre} €")
+print(f"Die jährlichen Gesamtkosten betragen: {round(gesamtkosten_jährlich, 2)} €")
+print(f"Die Kosten über die Betriebsdauer von 10 Jahren betragen: {round(gesamtkosten_10_jahre, 2)} €")
 # %%
 
 #++++++ Ausgeben der Ergebnisse/Plots +++++++
@@ -253,10 +254,8 @@ network.stores_t.e["BS stationär"][20162:20834].plot()
 network.links_t.p_max_pu["charge_ladesäule_5"]
 
 # %%
-network.links
-#network.links_t.p0["charge_ladesäule_9"].max()
-#network.links_t.p0["charge_ladesäule_10"].max()
 
+#%%
 network.links_t.p0["discharge_ladesäule_1"][0:700].plot()
 network.links_t.p0["discharge_ladesäule_2"][0:700].plot()
 network.links_t.p0["discharge_ladesäule_3"][0:700].plot()
@@ -281,12 +280,7 @@ network.links_t.p0["discharge_ladesäule_19"][0:700].plot()
 network.stores_t.e["E-Bus_11_store"][0:700].plot()
 network.stores_t.e["E-Bus_12_store"][0:700].plot()
 
-#network.loads_t.p["Load_8"][20462:20634].plot()
-#dynamischer_strompreis[20462:20634].plot()
-#network.stores_t.e["BS stationär"][20462:20634].plot()
 # %%
 
-# %%
-
-network.generators_t.p["Einspeisung"][:700].plot()
+network.generators_t.p["Einspeisung"].plot()
 # %%
