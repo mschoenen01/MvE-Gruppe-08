@@ -107,7 +107,7 @@ network.add("Generator", name = "PV Carport West", bus = "Electricity", p_nom_ex
 
 #++++++++++ Storages +++++++++++
 
-network.add("Store", name = "BS stationär", bus = "BS", e_nom_extendable = True, e_nom_max = 10000, capital_cost = capex_bs_anuity, marginal_cost = opex_bs) 
+network.add("Store", name = "BS stationär", bus = "BS", e_nom_extendable = True, e_nom_max = 3000, capital_cost = capex_bs_anuity, marginal_cost = opex_bs) 
 
 #++++++++++ Loads ++++++++++
 
@@ -162,9 +162,10 @@ for i in range(1, anzahl_ebusse+1):
     network.add("Store", 
                 name=f"E-Bus_{i}_store", 
                 bus=bus_node,
-                #e_nom_extendable=True, 
-                #e_nom_mod = 50, #kWh #Schrittweite auf 50 kWh, um Simulationszeit zu begrenzen
-                e_nom = e_nom_ebus, #kWh  
+                e_nom_extendable=True, 
+                e_nom_mod = 50, #kWh #Schrittweite auf 50 kWh, um Simulationszeit zu begrenzen
+                #e_nom = e_nom_ebus, #kWh 
+                capital_cost = 1000, 
                 e_min_pu = min_soc_bs,
                 e_max_pu = max_soc_bs           
                 )
