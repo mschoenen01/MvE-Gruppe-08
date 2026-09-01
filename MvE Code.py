@@ -17,10 +17,8 @@ einstrahlung_ost = pd.read_csv("pv_ost_interpoliert.csv", sep=',', decimal='.')
 lastprofil_standort = pd.read_csv("G25_Gewerbeprofil_2024_500000kWh_15min.csv", sep=';', decimal=',')
 
 lastprofil_ebus = pd.read_csv("PyPSA_Bus_Verbrauch_15min_Jahr-v2.csv", sep=',', decimal='.') #ohne Feiertage!! mit KI auf Basis eines realer Umlaufplans erstellt, stichprobenartig validiert
+lastprofil_ebus *= 4 #das Profil wurde bereits geviertelt, aber wegen snapshot_weightings muss es wieder mit 4 multipliziert werden, da es durch die Funktion geviertelt wird
 anwesenheit_ebus = pd.read_csv("Bus_Anwesenheit_15min_Woche-v2.csv", sep=',') #mit KI auf Basis eines realer Umlaufplans erstellt, stichprobenartig validiert
-
-#print(anwesenheit_ebus)
-
 
 #%% 
 
@@ -73,9 +71,9 @@ opex_bs = 0.05 * capex_bs_anuity #€/kWh*a     #Quelle??????????
 #Ladesäule
 effizienz_ladesäule_laden = 0.88
 effizienz_ladesäule_entladen = 0.6
-p_nom_ladesäule = 75 #kW     #15min-Wert, d.h. es handelt sich um eine 300 kW-Ladesäule #Quelle???????
-opex_ladesäule = 3000 #€/a
-capex_ladesäule = 10000 #€/a
+p_nom_ladesäule = 300 #kW  #Quelle???????
+#opex_ladesäule = 3000 #€/a
+#capex_ladesäule = 10000 #€/a
 
 
 #Vergleich: stationärer Speicher, dyn Tarife, bidirek. Laden, PV#
@@ -90,7 +88,7 @@ network = pypsa.Network()
 #++++++++++ Snapshots +++++++++ 
 
 network.set_snapshots(range(4*8760))
-#network.snapshot_weightings[:] = 0.25 ?????????
+network.snapshot_weightings[:] = 0.25
 
 #++++++++++ Bus +++++++++
 
@@ -108,7 +106,7 @@ network.add("Generator", name = "PV Carport West", bus = "Electricity", p_nom_ex
 
 #++++++++++ Storages +++++++++++
 
-network.add("Store", name = "BS stationär", bus = "BS", e_nom_extendable = True, e_nom_max = 10000, capital_cost = capex_bs_anuity, marginal_cost = opex_bs) 
+network.add("Store", name = "BS stationär", bus = "BS", e_nom_extendable = True, e_nom_max = 1000, capital_cost = capex_bs_anuity, marginal_cost = opex_bs) 
 
 #++++++++++ Loads ++++++++++
 
@@ -123,7 +121,7 @@ network.add("Link", name="bs_discharge", bus0="BS", bus1="Electricity", efficien
 
 # %%
 #E-Busse Schleife
-anzahl_ebusse = 5
+anzahl_ebusse = 19
 
 for i in range(1, anzahl_ebusse+1):
     bus_node = f"E-Bus_{i}"
@@ -190,13 +188,53 @@ network.optimize(solver_name="highs") #warum highs???
 #Stromkosten Netzbezug
 #PV OPEX+CAPEX
 #BS OPEX+CAPEX
+#%% Kosten
 
-#(network.generators["Netzbezug"].p_t * dynamischer_strompreis).sum() * laufzeit
+#Stromkosten
 
-strombezug = network.generators_t.p["Stromnetz"].sum() * 0.25
-einspeisung = network.generators_t.p["Einspeisung"].sum() * 0.25
+stromverbrauch_jährlich = network.generators_t.p["Stromnetz"]
+strompreis_jährlich_dynamisch = network.generators_t.marginal_cost["Stromnetz"]
+einspeisung_jährlich = network.generators_t.p["Einspeisung"]
 
+stromkosten_dynamischer_tarif = (stromverbrauch_jährlich * strompreis_jährlich_dynamisch * network.snapshot_weightings.objective).sum() - (einspeisung_jährlich * einspeisevergütung * network.snapshot_weightings.objective).sum()
 
+#OPEX PV
+
+opex_pv_carport_ost_kosten_jährlich = opex_pv_carport * network.generators.p_nom_opt["PV Carport Ost"]
+opex_pv_carport_west_kosten_jährlich = opex_pv_carport * network.generators.p_nom_opt["PV Carport West"]
+
+opex_pv_kosten_jährlich = opex_pv * network.generators.p_nom_opt["PV"]
+
+#CAPEX PV
+
+capex_pv_kosten_jährlich = capex_pv_anuity * network.generators.p_nom_opt["PV"]
+
+capex_pv_carport_ost_kosten_jährlich = capex_pv_carport_anuity * network.generators.p_nom_opt["PV Carport Ost"]
+capex_pv_carport_west_kosten_jährlich = capex_pv_carport_anuity * network.generators.p_nom_opt["PV Carport West"]
+
+#OPEX BS stationär
+
+opex_bs_kosten_jährlich = opex_bs * network.stores.e_nom_opt["BS stationär"]
+
+#CAPEX BS stationär
+
+capex_bs_kosten_jährlich = capex_bs_anuity * network.stores.e_nom_opt["BS stationär"]
+
+#Gesamtkosten
+
+gesamtkosten_jährlich = (
+    stromkosten_dynamischer_tarif
+    + opex_pv_kosten_jährlich
+    + capex_pv_carport_ost_kosten_jährlich
+    + capex_pv_carport_west_kosten_jährlich
+    + opex_bs_kosten_jährlich
+    + capex_bs_kosten_jährlich
+)
+
+gesamtkosten_10_jahre = gesamtkosten_jährlich * 10
+
+print("Die jährlichen Gesamtkosten betragen: {gesamtkosten_jährlich} €")
+print("Die Kosten über die Betriebsdauer von 10 Jahren betragen: {gesamtkosten_10_jahre} €")
 # %%
 
 #++++++ Ausgeben der Ergebnisse/Plots +++++++
