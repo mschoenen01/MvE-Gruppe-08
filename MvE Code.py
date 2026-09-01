@@ -181,23 +181,19 @@ print(network.loads.index.tolist())
 #++++++++++ Abfahrt!!! ++++++++++
 
 network.optimize(solver_name="highs") #warum highs???
+
 # %%
 #++++++Auswerten der Ergebnisse+++++++
-#auf n = 10 Jahre hochrechnen?
 
-#betrachtet:
-#Stromkosten Netzbezug
-#PV OPEX+CAPEX
-#BS OPEX+CAPEX
 #%% Kosten
 
 #Stromkosten
 
 stromverbrauch_jährlich = network.generators_t.p["Stromnetz"]
-strompreis_jährlich_dynamisch = network.generators_t.marginal_cost["Stromnetz"]
+strompreis_jährlich = network.generators_t.marginal_cost["Stromnetz"]
 einspeisung_jährlich = network.generators_t.p["Einspeisung"]
 
-stromkosten_dynamischer_tarif = (stromverbrauch_jährlich * strompreis_jährlich_dynamisch * network.snapshot_weightings.objective).sum() - (einspeisung_jährlich * einspeisevergütung * network.snapshot_weightings.objective).sum()
+stromkosten_jährlich = (stromverbrauch_jährlich * strompreis_jährlich * network.snapshot_weightings.objective).sum() - (einspeisung_jährlich * einspeisevergütung * network.snapshot_weightings.objective).sum()
 
 #OPEX PV
 
@@ -224,7 +220,7 @@ capex_bs_kosten_jährlich = capex_bs_anuity * network.stores.e_nom_opt["BS stati
 #Gesamtkosten
 
 gesamtkosten_jährlich = (
-    stromkosten_dynamischer_tarif
+    stromkosten_jährlich
     + opex_pv_kosten_jährlich
     + capex_pv_carport_ost_kosten_jährlich
     + capex_pv_carport_west_kosten_jährlich
@@ -236,11 +232,17 @@ gesamtkosten_10_jahre = gesamtkosten_jährlich * 10
 
 print(f"Die jährlichen Gesamtkosten betragen: {round(gesamtkosten_jährlich, 2)} €")
 print(f"Die Kosten über die Betriebsdauer von 10 Jahren betragen: {round(gesamtkosten_10_jahre, 2)} €")
+
 # %%
 
 #++++++ Ausgeben der Ergebnisse/Plots +++++++
 
-network.generators
+#Szenario 1: Basis (nur Netzbezug; ohne PV, ohne BS, ohne bidir. Laden)
+
+#Szenario 2: Maximale Wirtschaftlichkeit (PV und BS extendable ohne Begrenzung; mit bidir. Laden)
+
+#Szenario 3: Maximale Umsetzbarkeit (PV und BS extendable, aber begrenzt; mit bidir. Laden)
+
 # %%
 network.stores
 
