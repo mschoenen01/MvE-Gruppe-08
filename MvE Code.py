@@ -47,7 +47,7 @@ capex_pv_carport_anuity = capex_pv_carport * ((p * q**laufzeit) / (q**laufzeit -
 opex_pv_carport = 0.01*capex_pv_carport_anuity # 1% der Investitionskosten pro Jahr
 
 #E-Busse
-e_nom_ebus = 600 # kWh  #Annahme: liegt knapp überhalb der minimal benötigten Energie, um die Simulation nicht zu limitieren
+e_nom_ebus = 580 # kWh  #Annahme: liegt knapp überhalb der minimal benötigten Energie, um die Simulation nicht zu limitieren
 effizienz_ebus_laden = 0.99
 effizienz_ebus_entladen = 0.99
 #opex_ebus = unterhaltungskosten personalkosten #Annahme: vernachlässigbar, da es bereits vorhandene Infrastruktur und Kosten sind
@@ -107,7 +107,7 @@ network.add("Generator", name = "PV Carport West", bus = "Electricity", p_nom_ex
 
 #++++++++++ Storages +++++++++++
 
-network.add("Store", name = "BS stationär", bus = "BS", e_nom_extendable = True, e_nom_max = 3000, capital_cost = capex_bs_anuity, marginal_cost = opex_bs) 
+network.add("Store", name = "BS stationär", bus = "BS", e_nom_extendable = True, e_nom_max = 10000, capital_cost = capex_bs_anuity, marginal_cost = opex_bs) 
 
 #++++++++++ Loads ++++++++++
 
@@ -162,10 +162,10 @@ for i in range(1, anzahl_ebusse+1):
     network.add("Store", 
                 name=f"E-Bus_{i}_store", 
                 bus=bus_node,
-                e_nom_extendable=True, 
-                e_nom_mod = 50, #kWh #Schrittweite auf 50 kWh, um Simulationszeit zu begrenzen
-                #e_nom = e_nom_ebus, #kWh 
-                capital_cost = 1000, 
+                #e_nom_extendable=True, 
+                #e_nom_mod = 50, #kWh #Schrittweite auf 50 kWh, um Simulationszeit zu begrenzen
+                e_nom = e_nom_ebus, #kWh 
+                #capital_cost = 1000, 
                 e_min_pu = min_soc_bs,
                 e_max_pu = max_soc_bs           
                 )
@@ -285,5 +285,7 @@ network.stores_t.e["E-Bus_12_store"][0:700].plot()
 
 # %%
 
-network.generators_t.p["Einspeisung"].plot()
+network.generators_t.p["Einspeisung"][0:700].plot()
+# %%
+network.generators
 # %%
