@@ -41,13 +41,15 @@ einspeisevergütung = -0.07 #€/kWh #Annahme: Mittelwert von Direktvermarktung/
 capex_pv = 639 # €/kWp
 capex_pv_anuity = capex_pv * ((p * q**laufzeit) / (q**laufzeit - 1))
 opex_pv = 0.01*capex_pv_anuity # 1% der Investitionskosten pro Jahr
+fixkosten_pv_jährlich = capex_pv_anuity + opex_pv
 #Carport
 capex_pv_carport = 2000 # €/kWp
 capex_pv_carport_anuity = capex_pv_carport * ((p * q**laufzeit) / (q**laufzeit - 1))
 opex_pv_carport = 0.01*capex_pv_carport_anuity # 1% der Investitionskosten pro Jahr
+fixkosten_pv_carport_jährlich = capex_pv_carport_anuity + opex_pv_carport
 
 #E-Busse
-e_nom_ebus = 580 # kWh  #Annahme: liegt knapp überhalb der minimal benötigten Energie, um die Simulation nicht zu limitieren
+e_nom_ebus = 570 # kWh  #Annahme: liegt knapp überhalb der minimal benötigten Energie, um die Simulation nicht zu limitieren
 effizienz_ebus_laden = 0.99
 effizienz_ebus_entladen = 0.99
 #opex_ebus = unterhaltungskosten personalkosten #Annahme: vernachlässigbar, da es bereits vorhandene Infrastruktur und Kosten sind
@@ -65,6 +67,7 @@ degradation_bs = 0.8 #nach 10 Jahren 80 % Batteriekapazität vorhanden
 capex_bs = 300/degradation_bs # €/kWh Quelle: https://www.wireload.de/shop/Batteriespeicher-Containerlosung-1MWh-Speicherkapazitat-1kW-Leistung-p820225379
 capex_bs_anuity = capex_bs * ((p * q**laufzeit) / (q**laufzeit - 1))
 opex_bs = 0.05 * capex_bs_anuity #€/kWh*a     #Quelle?????????? 
+fixkosten_bs = capex_bs_anuity + opex_bs
 #selbstentladung_bs  #Annahme: vernachlässigbar, da minimal
 #min_soc_bs = 0.1 
 #max_soc_bs = 0.9 
@@ -99,14 +102,15 @@ network.add("Bus", name = "BS")
 #++++++++++ Generatoren ++++++++++
 
 network.add("Generator", name = "Stromnetz", bus = "Electricity", p_nom = 10000, marginal_cost = dynamischer_strompreis)
-network.add("Generator", name = "PV", bus = "Electricity", p_nom_extendable = True, p_nom_max = 290, p_max_pu = einstrahlung_süd["PV Leistung in kW"].values, capital_cost = capex_pv_anuity, marginal_cost = opex_pv)
+network.add("Generator", name = "PV", bus = "Electricity", p_nom_extendable = True, p_nom_max = 290, p_max_pu = einstrahlung_süd["PV Leistung in kW"].values, capital_cost = fixkosten_pv_jährlich)
 network.add("Generator", name = "Einspeisung", bus = "Electricity", p_nom = 10000, sign = -1, marginal_cost = einspeisevergütung)
-network.add("Generator", name = "PV Carport Ost", bus = "Electricity", p_nom_extendable = True, p_max_pu = einstrahlung_ost["PV Leistung in kW"].values, capital_cost = capex_pv_carport_anuity, marginal_cost = opex_pv_carport)
-network.add("Generator", name = "PV Carport West", bus = "Electricity", p_nom_extendable = True, p_max_pu = einstrahlung_west["PV Leistung in kW"].values, capital_cost = capex_pv_carport_anuity, marginal_cost = opex_pv_carport)
+network.add("Generator", name = "PV Carport West", bus = "Electricity", p_nom_extendable = True, p_nom_max = 100000, p_max_pu = einstrahlung_west["PV Leistung in kW"].values, capital_cost = fixkosten_pv_carport_jährlich)
+network.add("Generator", name = "PV Carport Ost", bus = "Electricity", p_nom_extendable = True, p_nom_max = 100000, p_max_pu = einstrahlung_ost["PV Leistung in kW"].values, capital_cost = fixkosten_pv_carport_jährlich)
+
 
 #++++++++++ Storages +++++++++++
 
-network.add("Store", name = "BS stationär", bus = "BS", e_nom_extendable = True, e_nom_max = 100, capital_cost = capex_bs_anuity, marginal_cost = opex_bs) 
+network.add("Store", name = "BS stationär", bus = "BS", e_nom_extendable = True, e_nom_max = 100000, capital_cost = fixkosten_bs) 
 
 #++++++++++ Loads ++++++++++
 
@@ -280,6 +284,26 @@ network.links_t.p0["discharge_ladesäule_18"][0:700].plot()
 network.links_t.p0["discharge_ladesäule_19"][0:700].plot()
 
 #%%
+network.links_t.p0["discharge_ladesäule_1"].plot()
+network.links_t.p0["discharge_ladesäule_2"].plot()
+network.links_t.p0["discharge_ladesäule_3"].plot()
+network.links_t.p0["discharge_ladesäule_4"].plot()
+network.links_t.p0["discharge_ladesäule_5"].plot()
+network.links_t.p0["discharge_ladesäule_6"].plot()
+network.links_t.p0["discharge_ladesäule_7"].plot()
+network.links_t.p0["discharge_ladesäule_8"].plot()
+network.links_t.p0["discharge_ladesäule_9"].plot()
+network.links_t.p0["discharge_ladesäule_10"].plot()
+network.links_t.p0["discharge_ladesäule_11"].plot()
+network.links_t.p0["discharge_ladesäule_12"].plot()
+network.links_t.p0["discharge_ladesäule_13"].plot()
+network.links_t.p0["discharge_ladesäule_14"].plot()
+network.links_t.p0["discharge_ladesäule_15"].plot()
+network.links_t.p0["discharge_ladesäule_16"].plot()
+network.links_t.p0["discharge_ladesäule_17"].plot()
+network.links_t.p0["discharge_ladesäule_18"].plot()
+network.links_t.p0["discharge_ladesäule_19"].plot()
+#%%
 network.stores_t.e["E-Bus_11_store"][0:700].plot()
 network.stores_t.e["E-Bus_12_store"][0:700].plot()
 
@@ -289,4 +313,35 @@ network.generators_t.p["Einspeisung"].plot()
 # %%
 network.generators
 
+# %%
+network.stores.e_nom_opt["BS stationär"]
+# %%
+network.generators_t.p["Einspeisung"].sum()
+#%%
+network.generators_t.p["Einspeisung"].max()
+# %%
+# Alle discharge-Links der E-Busse herausfiltern
+discharge_cols = network.links_t.p0.filter(like="discharge_ladesäule").columns
+
+# Summe über alle Busse zu jedem Zeitschritt (= Gesamtleistung in kW)
+discharge_summe = network.links_t.p0[discharge_cols].sum(axis=1)
+
+# Plot der Summenleistung
+discharge_summe.plot(title="Gesamte Rückspeiseleistung aus E-Bus-Flotte (bidirektionales Laden)")
+plt.ylabel("kW")
+plt.xlabel("Zeitschritt")
+plt.show()
+# %%
+# Maximale gleichzeitige Rückspeiseleistung (kW)
+discharge_max = discharge_summe.max()
+print(f"Maximale Rückspeiseleistung: {round(discharge_max, 2)} kW")
+
+# Gesamte durch bidirektionales Laden bereitgestellte Energie im Jahr (kWh)
+# snapshot_weightings berücksichtigen, da 15-Min-Werte sonst zu hoch gewichtet werden
+discharge_energie_jahr = (discharge_summe * network.snapshot_weightings.objective).sum()
+print(f"Gesamte Energie durch bidirektionales Laden: {round(discharge_energie_jahr, 2)} kWh/Jahr")
+# %%
+network.generators_t.p["Stromnetz"].sum()
+#%%
+network.generators_t.p["Stromnetz"].max()
 # %%
