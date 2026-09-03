@@ -165,7 +165,8 @@ for i in range(1, anzahl_ebusse+1):
                 e_nom_extendable=True, 
                 #e_nom_mod = 50, #kWh #Schrittweite auf 50 kWh, um Simulationszeit zu begrenzen
                 #e_nom = e_nom_ebus, #kWh 
-                capital_cost = 1000, 
+                e_nom_max = 580,
+                capital_cost = 10000, 
                 e_min_pu = min_soc_bs,
                 e_max_pu = max_soc_bs           
                 )
@@ -288,3 +289,5 @@ network.stores_t.e["E-Bus_12_store"][0:700].plot()
 network.generators_t.p["Einspeisung"].plot()
 # %%
 network.generators
+
+# %%
