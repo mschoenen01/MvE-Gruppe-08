@@ -33,7 +33,7 @@ q = 1.02 #1+Zinssatz
 laufzeit = 10 #a
 
 #Netz
-dynamischer_strompreis = df_spotmarktpreis["Strompreis dyn. 2030 ME"]/100
+dynamischer_strompreis = df_spotmarktpreis["Strompreis dyn. 2030 ME"]/100 # damit €/kWh vorliegen
 strompreis_statisch = dynamischer_strompreis.mean() # €/kWh
 einspeisevergütung = -0.07 #€/kWh #Annahme: Mittelwert von Direktvermarktung/PPA
 
@@ -101,7 +101,7 @@ network.add("Bus", name = "BS")
 network.add("Generator", name = "Stromnetz", bus = "Electricity", p_nom = 10000, marginal_cost = dynamischer_strompreis)
 network.add("Generator", name = "PV", bus = "Electricity", p_nom_extendable = True, p_nom_max = 290, p_max_pu = einstrahlung_süd["PV Leistung in kW"].values, capital_cost = capex_pv_anuity, marginal_cost = opex_pv)
 network.add("Generator", name = "Einspeisung", bus = "Electricity", p_nom = 10000, sign = -1, marginal_cost = einspeisevergütung)
-network.add("Generator", name = "PV Carport Ost", bus = "Electricity", p_nom_extendable = True, p_nom_max = 10000, p_max_pu = einstrahlung_ost["PV Leistung in kW"].values, capital_cost = capex_pv_carport_anuity, marginal_cost = opex_pv_carport)
+network.add("Generator", name = "PV Carport Ost", bus = "Electricity", p_nom_extendable = True, p_max_pu = einstrahlung_ost["PV Leistung in kW"].values, capital_cost = capex_pv_carport_anuity, marginal_cost = opex_pv_carport)
 network.add("Generator", name = "PV Carport West", bus = "Electricity", p_nom_extendable = True, p_max_pu = einstrahlung_west["PV Leistung in kW"].values, capital_cost = capex_pv_carport_anuity, marginal_cost = opex_pv_carport)
 
 #++++++++++ Storages +++++++++++
@@ -161,11 +161,11 @@ for i in range(1, anzahl_ebusse+1):
     network.add("Store", 
                 name=f"E-Bus_{i}_store", 
                 bus=bus_node,
-                e_nom_extendable=True, 
+                #e_nom_extendable=True, 
                 #e_nom_mod = 50, #kWh #Schrittweite auf 50 kWh, um Simulationszeit zu begrenzen
-                #e_nom = e_nom_ebus, #kWh 
-                e_nom_max = 580,
-                capital_cost = 10000, 
+                e_nom = e_nom_ebus, #kWh 
+                #e_nom_max = 580,
+                #capital_cost = 10000, 
                 e_min_pu = min_soc_bs,
                 e_max_pu = max_soc_bs           
                 )
