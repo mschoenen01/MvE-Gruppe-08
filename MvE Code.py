@@ -162,10 +162,10 @@ for i in range(1, anzahl_ebusse+1):
     network.add("Store", 
                 name=f"E-Bus_{i}_store", 
                 bus=bus_node,
-                #e_nom_extendable=True, 
+                e_nom_extendable=True, 
                 #e_nom_mod = 50, #kWh #Schrittweite auf 50 kWh, um Simulationszeit zu begrenzen
-                e_nom = e_nom_ebus, #kWh 
-                #capital_cost = 1000, 
+                #e_nom = e_nom_ebus, #kWh 
+                capital_cost = 1000, 
                 e_min_pu = min_soc_bs,
                 e_max_pu = max_soc_bs           
                 )
@@ -181,7 +181,7 @@ print(network.loads.index.tolist())
 
 #++++++++++ Abfahrt!!! ++++++++++
 
-network.optimize(solver_name="highs") #warum highs???
+network.optimize(solver_name="gurobi")
 
 # %%
 #++++++Auswerten der Ergebnisse+++++++
@@ -285,7 +285,6 @@ network.stores_t.e["E-Bus_12_store"][0:700].plot()
 
 # %%
 
-network.generators_t.p["Einspeisung"][0:700].plot()
+network.generators_t.p["Einspeisung"].plot()
 # %%
 network.generators
-# %%
