@@ -101,16 +101,16 @@ network.add("Bus", name = "BS")
 
 #++++++++++ Generatoren ++++++++++
 
-network.add("Generator", name = "Stromnetz", bus = "Electricity", p_nom = 10000, marginal_cost = dynamischer_strompreis)
+network.add("Generator", name = "Stromnetz", bus = "Electricity", p_nom = 10000, marginal_cost = strompreis_statisch)
 network.add("Generator", name = "PV", bus = "Electricity", p_nom_extendable = True, p_nom_max = 290, p_max_pu = einstrahlung_süd["PV Leistung in kW"].values, capital_cost = fixkosten_pv_jährlich)
 network.add("Generator", name = "Einspeisung", bus = "Electricity", p_nom = 10000, sign = -1, marginal_cost = einspeisevergütung)
-network.add("Generator", name = "PV Carport West", bus = "Electricity", p_nom_extendable = True, p_nom_max = 100000, p_max_pu = einstrahlung_west["PV Leistung in kW"].values, capital_cost = fixkosten_pv_carport_jährlich)
-network.add("Generator", name = "PV Carport Ost", bus = "Electricity", p_nom_extendable = True, p_nom_max = 100000, p_max_pu = einstrahlung_ost["PV Leistung in kW"].values, capital_cost = fixkosten_pv_carport_jährlich)
+network.add("Generator", name = "PV Carport West", bus = "Electricity", p_nom_extendable = True, p_nom_max = 10000, p_max_pu = einstrahlung_west["PV Leistung in kW"].values, capital_cost = fixkosten_pv_carport_jährlich)
+network.add("Generator", name = "PV Carport Ost", bus = "Electricity", p_nom_extendable = True, p_nom_max = 10000, p_max_pu = einstrahlung_ost["PV Leistung in kW"].values, capital_cost = fixkosten_pv_carport_jährlich)
 
 
 #++++++++++ Storages +++++++++++
 
-network.add("Store", name = "BS stationär", bus = "BS", e_nom_extendable = True, e_nom_max = 100000, capital_cost = fixkosten_bs) 
+network.add("Store", name = "BS stationär", bus = "BS", e_nom_extendable = True, e_nom_max = 10000, capital_cost = fixkosten_bs) 
 
 #++++++++++ Loads ++++++++++
 
