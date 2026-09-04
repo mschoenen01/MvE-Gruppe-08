@@ -82,6 +82,8 @@ p_nom_ladesäule = 300 #kW  #Quelle???????
 
 #Vergleich: stationärer Speicher, dyn Tarife, bidirek. Laden, PV#
 
+#%%
+strompreis_statisch
 # %%
 
 #++++++++++ Network erstellen++++++++++
@@ -101,7 +103,7 @@ network.add("Bus", name = "BS")
 
 #++++++++++ Generatoren ++++++++++
 
-network.add("Generator", name = "Stromnetz", bus = "Electricity", p_nom = 10000, marginal_cost = strompreis_statisch)
+network.add("Generator", name = "Stromnetz", bus = "Electricity", p_nom = 10000, marginal_cost = dynamischer_strompreis)
 network.add("Generator", name = "PV", bus = "Electricity", p_nom_extendable = True, p_nom_max = 290, p_max_pu = einstrahlung_süd["PV Leistung in kW"].values, capital_cost = fixkosten_pv_jährlich)
 network.add("Generator", name = "Einspeisung", bus = "Electricity", p_nom = 10000, sign = -1, marginal_cost = einspeisevergütung)
 network.add("Generator", name = "PV Carport West", bus = "Electricity", p_nom_extendable = True, p_nom_max = 10000, p_max_pu = einstrahlung_west["PV Leistung in kW"].values, capital_cost = fixkosten_pv_carport_jährlich)
@@ -180,7 +182,6 @@ print(network.links.index.tolist())
 print(network.buses.index.tolist())
 print(network.loads.index.tolist())
 
-
 # %%
 
 #++++++++++ Abfahrt!!! ++++++++++
@@ -195,7 +196,7 @@ network.optimize(solver_name="gurobi")
 #Stromkosten
 
 stromverbrauch_jährlich = network.generators_t.p["Stromnetz"]
-strompreis_jährlich = network.generators_t.marginal_cost["Stromnetz"]
+strompreis_jährlich = network.generators_t.marginal_cost["Stromnetz"] # bei dynamischem Tarif mit network.generators_t...; bei statischem Tarif ohne_t
 einspeisung_jährlich = network.generators_t.p["Einspeisung"]
 
 stromkosten_jährlich = (stromverbrauch_jährlich * strompreis_jährlich * network.snapshot_weightings.objective).sum() - (einspeisung_jährlich * einspeisevergütung * network.snapshot_weightings.objective).sum()
