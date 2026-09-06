@@ -199,7 +199,7 @@ stromverbrauch_jährlich = network.generators_t.p["Stromnetz"]
 strompreis_jährlich = network.generators_t.marginal_cost["Stromnetz"] # bei dynamischem Tarif mit network.generators_t...; bei statischem Tarif ohne_t
 einspeisung_jährlich = network.generators_t.p["Einspeisung"]
 
-stromkosten_jährlich = (stromverbrauch_jährlich * strompreis_jährlich * network.snapshot_weightings.objective).sum() - (einspeisung_jährlich * einspeisevergütung * network.snapshot_weightings.objective).sum()
+stromkosten_jährlich = (stromverbrauch_jährlich * strompreis_jährlich * network.snapshot_weightings.objective).sum() + (einspeisung_jährlich * einspeisevergütung * network.snapshot_weightings.objective).sum()
 
 #OPEX PV
 
@@ -227,16 +227,21 @@ capex_bs_kosten_jährlich = capex_bs_anuity * network.stores.e_nom_opt["BS stati
 
 gesamtkosten_jährlich = (
     stromkosten_jährlich
+    + capex_pv_kosten_jährlich
     + opex_pv_kosten_jährlich
     + capex_pv_carport_ost_kosten_jährlich
+    + opex_pv_carport_ost_kosten_jährlich
+    + opex_pv_carport_west_kosten_jährlich
     + capex_pv_carport_west_kosten_jährlich
     + opex_bs_kosten_jährlich
     + capex_bs_kosten_jährlich
 )
 
+prüfung_gesamtkosten_jährlich = network.objective
+
 gesamtkosten_10_jahre = gesamtkosten_jährlich * 10
 
-print(f"Die jährlichen Gesamtkosten betragen: {round(gesamtkosten_jährlich, 2)} €")
+print(f"Die jährlichen Gesamtkosten betragen: {round(gesamtkosten_jährlich, 2)} €. Die Prüfung beträgt: {round(prüfung_gesamtkosten_jährlich, 2)} €")
 print(f"Die Kosten über die Betriebsdauer von 10 Jahren betragen: {round(gesamtkosten_10_jahre, 2)} €")
 
 # %%
@@ -345,4 +350,51 @@ print(f"Gesamte Energie durch bidirektionales Laden: {round(discharge_energie_ja
 network.generators_t.p["Stromnetz"].sum()
 #%%
 network.generators_t.p["Stromnetz"].max()
+# %%
+#%% Sensitivitätsanalyse: Batteriespeicherkosten (capex_bs)
+
+capex_bs_werte = np.arange(100, 650, 50)  # €/kWh, 100 bis 600 in 50er-Schritten
+
+ergebnisse = []
+
+for capex_bs_test in capex_bs_werte:
+
+    # Fixkosten für diesen capex_bs-Wert neu berechnen (gleiche Formel wie oben)
+    capex_bs_anuity_test = (capex_bs_test / degradation_bs) * ((p * q**laufzeit) / (q**laufzeit - 1))
+    opex_bs_test = 0.05 * capex_bs_anuity_test
+    fixkosten_bs_test = capex_bs_anuity_test + opex_bs_test
+
+    # Nur den capital_cost des Speichers im bestehenden Netzwerk überschreiben
+    network.stores.loc["BS stationär", "capital_cost"] = fixkosten_bs_test
+
+    # Neu optimieren
+    status, cond = network.optimize(solver_name="gurobi")
+
+    # Ergebnisse sichern
+    ergebnisse.append({
+        "capex_bs": capex_bs_test,
+        "status": cond,
+        "e_nom_opt_BS": network.stores.e_nom_opt["BS stationär"],
+        "p_nom_opt_PV": network.generators.p_nom_opt["PV"],
+        "p_nom_opt_PV_Ost": network.generators.p_nom_opt["PV Carport Ost"],
+        "p_nom_opt_PV_West": network.generators.p_nom_opt["PV Carport West"],
+        "gesamtkosten_jährlich": network.objective,
+    })
+
+df_sensitivität = pd.DataFrame(ergebnisse)
+df_sensitivität
+#%%
+fig, ax1 = plt.subplots(figsize=(8,5))
+
+ax1.plot(df_sensitivität["capex_bs"], df_sensitivität["gesamtkosten_jährlich"], marker="o", color="tab:blue")
+ax1.set_xlabel("Speicherkosten capex_bs [€/kWh]")
+ax1.set_ylabel("Jährliche Systemkosten [€]", color="tab:blue")
+
+ax2 = ax1.twinx()
+ax2.plot(df_sensitivität["capex_bs"], df_sensitivität["e_nom_opt_BS"], marker="s", color="tab:red")
+ax2.set_ylabel("Optimale Speicherkapazität [kWh]", color="tab:red")
+
+plt.title("Sensitivierung der Batteriespeicherkosten")
+fig.tight_layout()
+plt.show()
 # %%
