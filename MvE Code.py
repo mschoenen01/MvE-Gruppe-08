@@ -83,7 +83,7 @@ p_nom_ladesäule = 300 #kW  #Quelle???????
 #Vergleich: stationärer Speicher, dyn Tarife, bidirek. Laden, PV#
 
 #%%
-strompreis_statisch
+einstrahlung_süd.sum()
 # %%
 
 #++++++++++ Network erstellen++++++++++
@@ -205,6 +205,7 @@ stromkosten_jährlich = (stromverbrauch_jährlich * strompreis_jährlich * netwo
 
 opex_pv_carport_ost_kosten_jährlich = opex_pv_carport * network.generators.p_nom_opt["PV Carport Ost"]
 opex_pv_carport_west_kosten_jährlich = opex_pv_carport * network.generators.p_nom_opt["PV Carport West"]
+opex_pv_carport_süd_kosten_jährlich = opex_pv_carport * network.generators.p_nom_opt["PV Carport Süd"]
 
 opex_pv_kosten_jährlich = opex_pv * network.generators.p_nom_opt["PV"]
 
@@ -214,6 +215,7 @@ capex_pv_kosten_jährlich = capex_pv_anuity * network.generators.p_nom_opt["PV"]
 
 capex_pv_carport_ost_kosten_jährlich = capex_pv_carport_anuity * network.generators.p_nom_opt["PV Carport Ost"]
 capex_pv_carport_west_kosten_jährlich = capex_pv_carport_anuity * network.generators.p_nom_opt["PV Carport West"]
+capex_pv_carport_süd_kosten_jährlich = capex_pv_carport_anuity * network.generators.p_nom_opt["PV Carport Süd"]
 
 #OPEX BS stationär
 
@@ -233,6 +235,8 @@ gesamtkosten_jährlich = (
     + opex_pv_carport_ost_kosten_jährlich
     + opex_pv_carport_west_kosten_jährlich
     + capex_pv_carport_west_kosten_jährlich
+    + opex_pv_carport_süd_kosten_jährlich
+    + capex_pv_carport_süd_kosten_jährlich
     + opex_bs_kosten_jährlich
     + capex_bs_kosten_jährlich
 )
