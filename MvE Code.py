@@ -108,7 +108,7 @@ network.add("Generator", name = "PV", bus = "Electricity", p_nom_extendable = Tr
 network.add("Generator", name = "Einspeisung", bus = "Electricity", p_nom = 10000, sign = -1, marginal_cost = einspeisevergütung)
 network.add("Generator", name = "PV Carport West", bus = "Electricity", p_nom_extendable = True, p_nom_max = 10000, p_max_pu = einstrahlung_west["PV Leistung in kW"].values, capital_cost = fixkosten_pv_carport_jährlich)
 network.add("Generator", name = "PV Carport Ost", bus = "Electricity", p_nom_extendable = True, p_nom_max = 10000, p_max_pu = einstrahlung_ost["PV Leistung in kW"].values, capital_cost = fixkosten_pv_carport_jährlich)
-
+network.add("Generator", name = "PV Carport Süd", bus = "Electricity", p_nom_extendable = True, p_nom_max = 10000, p_max_pu = einstrahlung_süd["PV Leistung in kW"].values, capital_cost = fixkosten_pv_carport_jährlich)
 
 #++++++++++ Storages +++++++++++
 
