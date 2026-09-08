@@ -83,7 +83,7 @@ p_nom_ladesäule = 300 #kW  #Quelle???????
 #Vergleich: stationärer Speicher, dyn Tarife, bidirek. Laden, PV#
 
 #%%
-einstrahlung_süd.sum()
+dynamischer_strompreis[16922:17000].plot()
 # %%
 
 #++++++++++ Network erstellen++++++++++
@@ -106,13 +106,13 @@ network.add("Bus", name = "BS")
 network.add("Generator", name = "Stromnetz", bus = "Electricity", p_nom = 10000, marginal_cost = dynamischer_strompreis)
 network.add("Generator", name = "PV", bus = "Electricity", p_nom_extendable = True, p_nom_max = 290, p_max_pu = einstrahlung_süd["PV Leistung in kW"].values, capital_cost = fixkosten_pv_jährlich)
 network.add("Generator", name = "Einspeisung", bus = "Electricity", p_nom = 10000, sign = -1, marginal_cost = einspeisevergütung)
-network.add("Generator", name = "PV Carport West", bus = "Electricity", p_nom_extendable = True, p_nom_max = 10000, p_max_pu = einstrahlung_west["PV Leistung in kW"].values, capital_cost = fixkosten_pv_carport_jährlich)
-network.add("Generator", name = "PV Carport Ost", bus = "Electricity", p_nom_extendable = True, p_nom_max = 10000, p_max_pu = einstrahlung_ost["PV Leistung in kW"].values, capital_cost = fixkosten_pv_carport_jährlich)
-network.add("Generator", name = "PV Carport Süd", bus = "Electricity", p_nom_extendable = True, p_nom_max = 10000, p_max_pu = einstrahlung_süd["PV Leistung in kW"].values, capital_cost = fixkosten_pv_carport_jährlich)
+network.add("Generator", name = "PV Carport West", bus = "Electricity", p_nom_extendable = True, p_nom_max = 5000, p_max_pu = einstrahlung_west["PV Leistung in kW"].values, capital_cost = fixkosten_pv_carport_jährlich)
+network.add("Generator", name = "PV Carport Ost", bus = "Electricity", p_nom_extendable = True, p_nom_max = 5000, p_max_pu = einstrahlung_ost["PV Leistung in kW"].values, capital_cost = fixkosten_pv_carport_jährlich)
+network.add("Generator", name = "PV Carport Süd", bus = "Electricity", p_nom_extendable = True, p_nom_max = 5000, p_max_pu = einstrahlung_süd["PV Leistung in kW"].values, capital_cost = fixkosten_pv_carport_jährlich)
 
 #++++++++++ Storages +++++++++++
 
-network.add("Store", name = "BS stationär", bus = "BS", e_nom_extendable = True, e_nom_max = 10000, capital_cost = fixkosten_bs) 
+network.add("Store", name = "BS stationär", bus = "BS", e_nom_extendable = True, e_nom_max = 1000, capital_cost = fixkosten_bs) 
 
 #++++++++++ Loads ++++++++++
 
@@ -354,7 +354,175 @@ print(f"Gesamte Energie durch bidirektionales Laden: {round(discharge_energie_ja
 network.generators_t.p["Stromnetz"].sum()
 #%%
 network.generators_t.p["Stromnetz"].max()
+
+#%%
+
+network.links_t.p0["discharge_ladesäule_19"][15000:18000].plot()
+
+#%% Beispielzeitraum: 3 Grafiken untereinander (Snapshots 16850–16945) mit Uhrzeit-Beschriftung — Bus 9
+
+import datetime
+
+zeitraum = slice(16850, 16945)
+snapshot_start = 16850
+
+# Referenzzeit für die Beschriftung: 16850 entspricht Mo 12:00
+start_time = datetime.datetime(2024, 1, 1, 12, 0)  # Datum beliebig, nur Uhrzeit/Wochentag-Logik relevant
+tage_map = {0: "Mo", 1: "Di", 2: "Mi", 3: "Do", 4: "Fr", 5: "Sa", 6: "So"}
+
+# Tick-Positionen: alle 2 Stunden (=8 Snapshots à 15 Min), plus Endpunkt
+tick_snapshots = list(np.arange(16850, 16946, 8))
+if tick_snapshots[-1] != 16945:
+    tick_snapshots.append(16945)
+
+tick_labels = []
+for s in tick_snapshots:
+    delta_min = int((s - snapshot_start) * 15)
+    t = start_time + datetime.timedelta(minutes=delta_min)
+    tag = tage_map[t.weekday()]
+    tick_labels.append(f"{tag} {t.strftime('%H:%M')}")
+
+fig, axs = plt.subplots(3, 1, figsize=(12, 12), sharex=True)
+
+# ---------- Grafik 1: Speicherkapazität BS stationär + E-Bus_9 ----------
+
+ax1 = axs[0]
+ax1b = ax1.twinx()
+
+ax1.plot(network.stores_t.e["BS stationär"][zeitraum], color="tab:blue", label="BS stationär")
+ax1b.plot(network.stores_t.e["E-Bus_9_store"][zeitraum], color="tab:orange", label="E-Bus_9_store")
+
+ax1.set_ylabel("BS stationär [kWh]", color="tab:blue")
+ax1b.set_ylabel("E-Bus_9 [kWh]", color="tab:orange")
+ax1.set_title("Speicherkapazität: stationärer Speicher & E-Bus 9")
+
+lines1, labels1 = ax1.get_legend_handles_labels()
+lines1b, labels1b = ax1b.get_legend_handles_labels()
+ax1.legend(lines1 + lines1b, labels1 + labels1b, loc="upper left", fontsize=8)
+
+# ---------- Grafik 2: bidirektionale Links Bus 9 + Anwesenheit ----------
+
+ax2 = axs[1]
+ax2b = ax2.twinx()
+
+ax2.plot(network.links_t.p0["charge_ladesäule_9"][zeitraum], color="tab:green", label="Laden Bus 9")
+ax2.plot(network.links_t.p0["discharge_ladesäule_9"][zeitraum], color="tab:red", label="Entladen Bus 9")
+ax2b.plot(anwesenheit_ebus["Bus_9"][zeitraum], color="grey", linestyle="--", alpha=0.6, label="Anwesenheit Bus 9")
+
+ax2.set_ylabel("Leistung [kW]")
+ax2b.set_ylabel("Anwesenheit [0/1]")
+ax2.set_title("Bidirektionales Laden Bus 9 & Anwesenheit")
+
+lines2, labels2 = ax2.get_legend_handles_labels()
+lines2b, labels2b = ax2b.get_legend_handles_labels()
+ax2.legend(lines2 + lines2b, labels2 + labels2b, loc="upper left", fontsize=8)
+
+# ---------- Grafik 3: PV gesamt, Netzbezug, Einspeisung, Strompreis ----------
+
+ax3 = axs[2]
+ax3b = ax3.twinx()
+
+pv_gesamt = (
+    network.generators_t.p["PV"]
+    + network.generators_t.p["PV Carport Ost"]
+    + network.generators_t.p["PV Carport West"]
+)
+
+ax3.plot(pv_gesamt[zeitraum], color="gold", label="PV gesamt")
+ax3.plot(network.generators_t.p["Stromnetz"][zeitraum], color="tab:blue", label="Netzbezug")
+ax3.plot(network.generators_t.p["Einspeisung"][zeitraum], color="tab:purple", label="Einspeisung")
+ax3b.plot(dynamischer_strompreis[zeitraum], color="black", linestyle=":", label="Dyn. Strompreis")
+
+ax3.set_ylabel("Leistung [kW]")
+ax3b.set_ylabel("Strompreis [€/kWh]")
+ax3.set_xlabel("Uhrzeit")
+ax3.set_title("PV-Erzeugung, Netzbezug, Einspeisung & dynamischer Strompreis")
+
+lines3, labels3 = ax3.get_legend_handles_labels()
+lines3b, labels3b = ax3b.get_legend_handles_labels()
+ax3.legend(lines3 + lines3b, labels3 + labels3b, loc="upper left", fontsize=8)
+
+# x-Achse: Zeitraum begrenzen + Uhrzeit-Ticks auf allen Subplots setzen
+for ax in axs:
+    ax.set_xlim(16850, 16945)
+    ax.set_xticks(tick_snapshots)
+
+axs[-1].set_xticklabels(tick_labels, rotation=45, ha="right")
+
+plt.tight_layout()
+plt.show()
+
+
 # %%
+
+
+
+
+
+
+
+#Ab hier dauert die Berechnung wegen Sensitivität
+
+
+
+
+
+
+
+
+
+#%% Sensitivitätsanalyse: statischer vs. dynamischer Strompreis
+
+# 1. Baseline sichern (dynamisches Szenario muss vorher bereits optimiert worden sein)
+kosten_dynamisch = network.objective
+print(f"Systemkosten dynamischer Tarif: {round(kosten_dynamisch, 2)} €")
+
+# 2. Zeitreihen-Preis am Generator "Stromnetz" entfernen, damit statischer Wert greift
+network.generators_t.marginal_cost = network.generators_t.marginal_cost.drop(
+    columns=["Stromnetz"], errors="ignore"
+)
+
+# 3. Schleife über statische Strompreise
+statische_preise = np.arange(0.20, 0.46, 0.02)  # €/kWh, 20 bis 45 ct in 1-ct-Schritten
+
+ergebnisse_preis = []
+
+for preis in statische_preise:
+    network.generators.loc["Stromnetz", "marginal_cost"] = preis
+    status, cond = network.optimize(solver_name="gurobi")
+    
+    ergebnisse_preis.append({
+        "strompreis_ct_kwh": preis * 100,
+        "status": cond,
+        "systemkosten": network.objective,
+        "e_nom_opt_BS": network.stores.e_nom_opt["BS stationär"],
+        "p_nom_opt_PV": network.generators.p_nom_opt["PV"],
+    })
+
+df_preis_sensitivität = pd.DataFrame(ergebnisse_preis)
+df_preis_sensitivität
+
+#%% Schnittpunkt näherungsweise bestimmen
+
+diff = df_preis_sensitivität["systemkosten"] - kosten_dynamisch
+schnittpunkt_idx = (diff.abs()).idxmin()
+#schnittpunkt_preis = df_preis_sensitivität.loc[schnittpunkt_idx, "strompreis_ct_kwh"]
+#print(f"Näherungsweiser Schnittpunkt bei ca. {schnittpunkt_preis} ct/kWh")
+
+#%% Plot
+
+plt.figure(figsize=(8,5))
+plt.plot(df_preis_sensitivität["strompreis_ct_kwh"], df_preis_sensitivität["systemkosten"],
+         marker="o", label="Statischer Tarif")
+plt.axhline(kosten_dynamisch, color="red", linestyle="--", label="Dynamischer Tarif")
+#plt.axvline(schnittpunkt_preis, color="grey", linestyle=":", label=f"Schnittpunkt ≈ {schnittpunkt_preis} ct/kWh")
+
+plt.xlabel("Statischer Strompreis [ct/kWh]")
+plt.ylabel("Jährliche Systemkosten [€]")
+plt.title("Systemkosten: Statischer vs. dynamischer Strompreis")
+plt.legend(loc="upper left", fontsize=8)
+plt.tight_layout()
+plt.show()
 #%% Sensitivitätsanalyse: Batteriespeicherkosten (capex_bs)
 
 capex_bs_werte = np.arange(100, 650, 50)  # €/kWh, 100 bis 600 in 50er-Schritten
