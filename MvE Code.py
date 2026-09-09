@@ -103,7 +103,7 @@ network.add("Bus", name = "BS")
 
 #++++++++++ Generatoren ++++++++++
 
-network.add("Generator", name = "Stromnetz", bus = "Electricity", p_nom = 10000, marginal_cost = strompreis_statisch)
+network.add("Generator", name = "Stromnetz", bus = "Electricity", p_nom = 10000, marginal_cost = dynamischer_strompreis)
 network.add("Generator", name = "PV", bus = "Electricity", p_nom_extendable = True, p_nom_max = 290, p_max_pu = einstrahlung_süd["PV Leistung in kW"].values, capital_cost = fixkosten_pv_jährlich)
 network.add("Generator", name = "Einspeisung", bus = "Electricity", p_nom = 10000, sign = -1, marginal_cost = einspeisevergütung)
 network.add("Generator", name = "PV Carport West", bus = "Electricity", p_nom_extendable = True, p_nom_max = 5000, p_max_pu = einstrahlung_west["PV Leistung in kW"].values, capital_cost = fixkosten_pv_carport_jährlich)
@@ -523,6 +523,112 @@ axs[-1].set_xticklabels(tick_labels, rotation=45, ha="right")
 plt.tight_layout()
 plt.show()
 
+#%%
+#%% Beispielzeitraum: 3 Grafiken untereinander (Snapshots 16850–16945) mit Uhrzeit-Beschriftung
+
+import datetime
+from matplotlib.ticker import MaxNLocator
+
+zeitraum = slice(16850, 16945)
+snapshot_start = 16850
+
+# Referenzzeit für die Beschriftung: 16850 entspricht Mo 12:00
+start_time = datetime.datetime(2024, 1, 1, 12, 0)
+tage_map = {0: "Mo", 1: "Di", 2: "Mi", 3: "Do", 4: "Fr", 5: "Sa", 6: "So"}
+
+tick_snapshots = list(np.arange(16850, 16946, 8))
+if tick_snapshots[-1] != 16945:
+    tick_snapshots.append(16945)
+
+tick_labels = []
+for s in tick_snapshots:
+    delta_min = int((s - snapshot_start) * 15)
+    t = start_time + datetime.timedelta(minutes=delta_min)
+    tag = tage_map[t.weekday()]
+    tick_labels.append(f"{tag} {t.strftime('%H:%M')}")
+
+# Hilfsgrößen: Anwesenheit & Lade-/Entladeleistung über alle Busse summiert
+anwesenheit_spalten = [f"Bus_{i}" for i in range(1, anzahl_ebusse+1)]
+anwesenheit_summe = anwesenheit_ebus[anwesenheit_spalten].sum(axis=1)
+
+charge_cols = [c for c in network.links_t.p0.filter(like="charge_ladesäule").columns if "discharge" not in c]
+discharge_cols = network.links_t.p0.filter(like="discharge_ladesäule").columns
+
+charge_summe = network.links_t.p0[charge_cols].sum(axis=1)
+discharge_summe = network.links_t.p0[discharge_cols].sum(axis=1)
+
+pv_gesamt = (
+    network.generators_t.p["PV"]
+    + network.generators_t.p["PV Carport Ost"]
+    + network.generators_t.p["PV Carport West"]
+)
+
+fig, axs = plt.subplots(3, 1, figsize=(12, 12), sharex=True)
+
+# ---------- Grafik 1: BS stationär + Standortlast + PV gesamt ----------
+
+ax1 = axs[0]
+ax1b = ax1.twinx()
+
+ax1.plot(network.stores_t.e["BS stationär"][zeitraum], color="tab:blue", label="BS stationär")
+ax1b.plot(network.loads_t.p["Last_Standort"][zeitraum], color="black", label="Last Standort")
+ax1b.plot(pv_gesamt[zeitraum], color="gold", label="PV gesamt")
+
+ax1.set_ylabel("BS stationär [kWh]", color="tab:blue")
+ax1b.set_ylabel("Leistung [kW]")
+ax1.set_title("Speicherkapazität BS stationär, Standortlast & PV-Erzeugung")
+
+lines1, labels1 = ax1.get_legend_handles_labels()
+lines1b, labels1b = ax1b.get_legend_handles_labels()
+ax1.legend(lines1 + lines1b, labels1 + labels1b, loc="upper left", fontsize=8)
+
+# ---------- Grafik 2: Summe Laden/Entladen gesamte Flotte + Anwesenheit aller Busse ----------
+
+ax2 = axs[1]
+ax2b = ax2.twinx()
+
+ax2.plot(charge_summe[zeitraum], color="tab:green", label="Summe Laden")
+ax2.plot(discharge_summe[zeitraum], color="tab:red", label="Summe Entladen")
+ax2b.plot(anwesenheit_summe[zeitraum], color="grey", linestyle="--", alpha=0.6, label="Anzahl anwesender Busse")
+
+ax2.set_ylabel("Leistung [kW]")
+ax2b.set_ylabel("Anzahl anwesender Busse [0–19]", color="grey")
+ax2b.set_ylim(0, anzahl_ebusse)
+ax2b.yaxis.set_major_locator(MaxNLocator(integer=True))  # nur ganzzahlige Werte
+ax2.set_title("Bidirektionales Laden gesamte Flotte & Anzahl anwesender Busse")
+
+lines2, labels2 = ax2.get_legend_handles_labels()
+lines2b, labels2b = ax2b.get_legend_handles_labels()
+ax2.legend(lines2 + lines2b, labels2 + labels2b, loc="upper left", fontsize=8)
+
+# ---------- Grafik 3: PV gesamt, Netzbezug, Einspeisung, Strompreis ----------
+
+ax3 = axs[2]
+ax3b = ax3.twinx()
+
+ax3.plot(pv_gesamt[zeitraum], color="gold", label="PV gesamt")
+ax3.plot(network.generators_t.p["Stromnetz"][zeitraum], color="tab:blue", label="Netzbezug")
+ax3.plot(network.generators_t.p["Einspeisung"][zeitraum], color="tab:purple", label="Einspeisung")
+ax3b.plot(dynamischer_strompreis[zeitraum], color="black", linestyle=":", label="Dyn. Strompreis")
+
+ax3.set_ylabel("Leistung [kW]")
+ax3b.set_ylabel("Strompreis [€/kWh]")
+ax3.set_xlabel("Uhrzeit")
+ax3.set_title("PV-Erzeugung, Netzbezug, Einspeisung & dynamischer Strompreis")
+
+lines3, labels3 = ax3.get_legend_handles_labels()
+lines3b, labels3b = ax3b.get_legend_handles_labels()
+ax3.legend(lines3 + lines3b, labels3 + labels3b, loc="upper left", fontsize=8)
+
+# x-Achse: Zeitraum begrenzen + Uhrzeit-Ticks auf allen Subplots setzen
+for ax in axs:
+    ax.set_xlim(16850, 16945)
+    ax.set_xticks(tick_snapshots)
+
+axs[-1].set_xticklabels(tick_labels, rotation=45, ha="right")
+
+plt.tight_layout()
+plt.show()
 
 # %%
 
