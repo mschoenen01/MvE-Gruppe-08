@@ -398,7 +398,48 @@ ax1.set_title("Speicherkapazität: stationärer Speicher & E-Bus 9")
 
 lines1, labels1 = ax1.get_legend_handles_labels()
 lines1b, labels1b = ax1b.get_legend_handles_labels()
+ax1.legend(lines1 + lines1b, labels1 + labels1b, loc="upper left", fontsize=8)# ---------- Grafik 1: Speicherkapazität BS stationär + E-Bus_9 ----------
+
+ax1 = axs[0]
+ax1b = ax1.twinx()
+
+ax1.plot(network.stores_t.e["BS stationär"][zeitraum], color="tab:blue", label="BS stationär")
+ax1b.plot(network.stores_t.e["E-Bus_9_store"][zeitraum], color="tab:orange", label="E-Bus_9_store")
+
+ax1.set_ylabel("BS stationär [kWh]", color="tab:blue")
+ax1b.set_ylabel("E-Bus_9 [kWh]", color="tab:orange")
+ax1.set_title("Speicherkapazität: stationärer Speicher & E-Bus 9")
+
+lines1, labels1 = ax1.get_legend_handles_labels()
+lines1b, labels1b = ax1b.get_legend_handles_labels()
 ax1.legend(lines1 + lines1b, labels1 + labels1b, loc="upper left", fontsize=8)
+# ---------- Grafik 1.1: Nur Speicherkapazität BS stationär ----------
+zeitraum = slice(16850, 16945)
+
+anwesenheit_spalten = [f"Bus_{i}" for i in range(1, anzahl_ebusse+1)]
+anwesenheit_summe = anwesenheit_ebus[anwesenheit_spalten].sum(axis=1)
+
+fig, axs = plt.subplots(1, 1, figsize=(12, 4))
+
+ax1 = axs
+ax1b = ax1.twinx()
+
+ax1.plot(network.stores_t.e["BS stationär"][zeitraum], color="tab:blue", label="BS stationär")
+ax1b.plot(anwesenheit_summe[zeitraum], color="grey", linestyle="--", alpha=0.6, label="Anzahl anwesender Busse")
+
+ax1.set_ylabel("BS stationär [kWh]", color="tab:blue")
+ax1b.set_ylabel("Anzahl anwesender Busse [0-19]", color="grey")
+ax1b.set_ylim(0, anzahl_ebusse)
+ax1.set_title("Speicherkapazität: stationärer Speicher & Anzahl anwesender Busse")
+
+lines1, labels1 = ax1.get_legend_handles_labels()
+lines1b, labels1b = ax1b.get_legend_handles_labels()
+ax1.legend(lines1 + lines1b, labels1 + labels1b, loc="upper left", fontsize=8)
+
+ax1.set_xlim(16850, 16945)
+
+plt.tight_layout()
+plt.show()
 
 # ---------- Grafik 2: bidirektionale Links Bus 9 + Anwesenheit ----------
 
@@ -416,6 +457,36 @@ ax2.set_title("Bidirektionales Laden Bus 9 & Anwesenheit")
 lines2, labels2 = ax2.get_legend_handles_labels()
 lines2b, labels2b = ax2b.get_legend_handles_labels()
 ax2.legend(lines2 + lines2b, labels2 + labels2b, loc="upper left", fontsize=8)
+
+# ---------- Grafik 2.2: bidirektionale Links + Anwesenheit aller Busse ----------
+
+zeitraum = slice(16850, 16945)
+
+charge_cols = network.links_t.p0.filter(like="charge_ladesäule").columns
+charge_cols = [c for c in charge_cols if "discharge" not in c]
+discharge_cols = network.links_t.p0.filter(like="discharge_ladesäule").columns
+
+charge_summe = network.links_t.p0[charge_cols].sum(axis=1)
+discharge_summe = network.links_t.p0[discharge_cols].sum(axis=1)
+
+fig, axs = plt.subplots(1, 1, figsize=(12, 4))
+
+ax2 = axs
+
+ax2.plot(charge_summe[zeitraum], color="tab:green", label="Summe Laden")
+ax2.plot(discharge_summe[zeitraum], color="tab:red", label="Summe Entladen")
+
+ax2.set_ylabel("Leistung [kW]")
+ax2.set_title("Bidirektionales Laden gesamte Flotte")
+
+lines2, labels2 = ax2.get_legend_handles_labels()
+ax2.legend(lines2, labels2, loc="upper left", fontsize=8)
+
+ax2.set_xlim(16850, 16945)
+
+plt.tight_layout()
+plt.show()
+
 
 # ---------- Grafik 3: PV gesamt, Netzbezug, Einspeisung, Strompreis ----------
 
