@@ -606,7 +606,7 @@ ax2.legend(lines2 + lines2b, labels2 + labels2b, loc="upper left", fontsize=8)
 ax3 = axs[2]
 ax3b = ax3.twinx()
 
-ax3.plot(pv_gesamt[zeitraum], color="gold", label="PV gesamt")
+#ax3.plot(pv_gesamt[zeitraum], color="gold", label="PV gesamt")
 ax3.plot(network.generators_t.p["Stromnetz"][zeitraum], color="tab:blue", label="Netzbezug")
 ax3.plot(network.generators_t.p["Einspeisung"][zeitraum], color="tab:purple", label="Einspeisung")
 ax3b.plot(dynamischer_strompreis[zeitraum], color="black", linestyle=":", label="Dyn. Strompreis")
